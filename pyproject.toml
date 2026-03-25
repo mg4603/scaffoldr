@@ -1,12 +1,13 @@
 [build-system]
-reqires = ["hatchling"]
-build-backend = "hatchling-build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "scaffoldr"
 version = "0.1.0"
-description = "CLI tool that scaffolds new projects with \
-opinionated structure"
+description = "CLI tool that scaffolds new projects with opinionated structure"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = [
     "typer>=0.9.0",
@@ -19,4 +20,12 @@ scaffoldr = "scaffoldr.main:app"
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
+    "ruff>=0.4.0"
 ]
+
+[tool.ruff]
+line-length = 72
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
