@@ -47,6 +47,7 @@ Follow conventional commits:
 - fix: fix a bug
 - chore: tooling, config, dependencies
 - docs: documentation only
+- test: add tests
 
 ## Pull Requests
 
