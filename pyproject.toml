@@ -17,7 +17,7 @@ dependencies = [
 [project.scripts]
 scaffoldr = "scaffoldr.main:app"
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0"

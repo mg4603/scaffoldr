@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import typer
 from typing import Optional
+from pathlib import Path
+
 from scaffoldr.config import (
     Config,
     CONFIG_FILE,
     DEFAULT_LICENSE,
     DEFAULT_PYTHON_VERSION,
 )
+from scaffoldr.local import scaffold as _scaffold
 
 app = typer.Typer(
     name="scaffoldr",
@@ -61,3 +64,16 @@ def config_show() -> None:
     typer.echo(f"python_version  = {cfg.python_version!r}")
     typer.echo(f"license         = {cfg.license!r}")
     typer.echo(f"default_private = {cfg.default_private}")
+
+
+@app.command("init")
+def init(
+    project_name: str = typer.Argument(
+        ..., help="Name of the new project"
+    ),
+    path: Path = typer.Option(
+        Path("."), help="Where to create the project"
+    ),
+) -> None:
+    """Scaffold a new project locally."""
+    _scaffold(project_name, path)
