@@ -35,6 +35,9 @@ def config_init(
     default_private: bool = typer.Option(
         False, prompt="Private repos by default?"
     ),
+    github_token: str = typer.Option(
+        "", prompt="GitHub token (leave blank to skip)"
+    ),
 ) -> None:
     """Create ~/.scaffoldr/config.toml interactively."""
     if CONFIG_FILE.exists():
@@ -50,6 +53,7 @@ def config_init(
         python_version=python_version,
         license=license,
         default_private=default_private,
+        github_token=github_token or "",
     )
     cfg.write()
     typer.echo(f"Config written to {CONFIG_FILE}.")
@@ -64,6 +68,12 @@ def config_show() -> None:
     typer.echo(f"python_version  = {cfg.python_version!r}")
     typer.echo(f"license         = {cfg.license!r}")
     typer.echo(f"default_private = {cfg.default_private}")
+    masked = (
+        cfg.github_token[:4] + "****"
+        if cfg.github_token
+        else "(not set)"
+    )
+    typer.echo(f"github_token    = {masked}")
 
 
 @app.command("init")
