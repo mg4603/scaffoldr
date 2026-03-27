@@ -19,6 +19,7 @@ class Config:
     license: str = DEFAULT_LICENSE
     python_version: str = DEFAULT_PYTHON_VERSION
     default_private: bool = False
+    github_token: str = ""
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -35,6 +36,7 @@ class Config:
                 "python_version", DEFAULT_PYTHON_VERSION
             ),
             default_private=data.get("default_private", False),
+            github_token=data.get("github_token", ""),
             extra={
                 k: v
                 for k, v in data.items()
@@ -45,6 +47,7 @@ class Config:
                     "license",
                     "python_version",
                     "default_private",
+                    "github_token",
                 }
             },
         )
@@ -57,5 +60,6 @@ class Config:
             f'license = "{self.license}"\n',
             f'python_version = "{self.python_version}"\n',
             f"default_private = {str(self.default_private).lower()}\n",
+            f'github_token = "{self.github_token}"\n',
         ]
         CONFIG_FILE.write_text("".join(lines))
