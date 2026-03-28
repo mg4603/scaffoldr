@@ -48,6 +48,9 @@ def config_init(
     github_token: str = typer.Option(
         "", prompt="GitHub token (leave blank to skip)"
     ),
+    required_reviewers: int = typer.Option(
+        1, prompt="Required PR reviewers"
+    ),
 ) -> None:
     """Create ~/.scaffoldr/config.toml interactively."""
     if CONFIG_FILE.exists():
@@ -64,6 +67,7 @@ def config_init(
         license=license,
         default_private=default_private,
         github_token=github_token or "",
+        required_reviewers=required_reviewers,
     )
     cfg.write()
     typer.echo(f"Config written to {CONFIG_FILE}.")
@@ -73,17 +77,18 @@ def config_init(
 def config_show() -> None:
     """Print current config values."""
     cfg = Config.load()
-    typer.echo(f"author          = {cfg.author!r}")
-    typer.echo(f"github_username = {cfg.github_username!r}")
-    typer.echo(f"python_version  = {cfg.python_version!r}")
-    typer.echo(f"license         = {cfg.license!r}")
-    typer.echo(f"default_private = {cfg.default_private}")
+    typer.echo(f"author             = {cfg.author!r}")
+    typer.echo(f"github_username    = {cfg.github_username!r}")
+    typer.echo(f"python_version     = {cfg.python_version!r}")
+    typer.echo(f"license            = {cfg.license!r}")
+    typer.echo(f"default_private    = {cfg.default_private}")
+    typer.echo(f"required_reviewers = {cfg.required_reviewers}")
     masked = (
         cfg.github_token[:4] + "****"
         if cfg.github_token
         else "(not set)"
     )
-    typer.echo(f"github_token    = {masked}")
+    typer.echo(f"github_token       = {masked}")
 
 
 @issues_app.command("create")
