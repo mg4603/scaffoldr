@@ -12,7 +12,12 @@ from scaffoldr.config import (
     DEFAULT_PYTHON_VERSION,
 )
 from scaffoldr.local import scaffold as _scaffold
-from scaffoldr.github import create_repo as _create_repo
+from scaffoldr.github import (
+    create_repo as _create_repo,
+    get_client,
+    get_authenticated_user,
+)
+from scaffoldr.issues import create_issues as _create_issues
 
 app = typer.Typer(
     name="scaffoldr",
@@ -22,6 +27,9 @@ app = typer.Typer(
 
 config_app = typer.Typer(name="config", help="Manage scaffoldr config.")
 app.add_typer(config_app)
+
+issues_app = typer.Typer(name="issues", help="Manage GitHub issues.")
+app.add_typer(issues_app)
 
 
 @config_app.command("init")
@@ -78,6 +86,25 @@ def config_show() -> None:
     typer.echo(f"github_token    = {masked}")
 
 
+@issues_app.command("create")
+def issues_create(
+    repo: str = typer.Argument(
+        ..., help="Repo name (owner/repo or just repo)"
+    ),
+) -> None:
+    """Create default issues on an existing GitHub repo."""
+    with get_client() as client:
+        if "/" in repo:
+            owner, repo_name = repo.split("/", 1)
+        else:
+            owner = get_authenticated_user(client)
+            repo_name = repo
+
+        typer.echo(f"Creating issues on {owner}/{repo_name}...")
+        created = _create_issues(owner, repo_name, client)
+        typer.echo(f"Done. {len(created)} issues created.")
+
+
 @app.command("init")
 def init(
     project_name: str = typer.Argument(
@@ -91,7 +118,7 @@ def init(
     _scaffold(project_name, path)
 
 
-@app.comman("new")
+@app.command("new")
 def new(
     project_name: str = typer.Argument(
         ..., help="Name of the new project"
@@ -128,5 +155,10 @@ def new(
     subprocess.run(
         ["git", "push", "-u", "origin", "main"], cwd=root, check=True
     )
+
+    typer.echo("Creating issues...")
+    with get_client() as client:
+        owner = get_authenticated_user(client)
+        _create_issues(owner, project_name, client)
 
     typer.echo(f"Repo ready: {repo['html_url']}")
