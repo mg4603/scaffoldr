@@ -18,6 +18,7 @@ from scaffoldr.github import (
     get_authenticated_user,
 )
 from scaffoldr.issues import create_issues as _create_issues
+from scaffoldr.protection import protect_branch as _protect_branch
 
 app = typer.Typer(
     name="scaffoldr",
@@ -135,6 +136,9 @@ def new(
     path: Path = typer.Option(
         Path("."), help="Where to create the project locally"
     ),
+    protect: bool = typer.Option(
+        True, help="Enable branch protection on main."
+    ),
 ) -> None:
     """
     Scaffold a new project locally and create a
@@ -161,9 +165,19 @@ def new(
         ["git", "push", "-u", "origin", "main"], cwd=root, check=True
     )
 
-    typer.echo("Creating issues...")
     with get_client() as client:
         owner = get_authenticated_user(client)
+
+        typer.echo("Creating issues...")
         _create_issues(owner, project_name, client)
+
+        if protect:
+            typer.echo("Setting branch protection...")
+            _protect_branch(
+                owner,
+                project_name,
+                client,
+                required_reviewers=cfg.required_reviewers,
+            )
 
     typer.echo(f"Repo ready: {repo['html_url']}")
