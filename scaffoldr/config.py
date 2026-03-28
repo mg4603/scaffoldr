@@ -20,6 +20,7 @@ class Config:
     python_version: str = DEFAULT_PYTHON_VERSION
     default_private: bool = False
     github_token: str = ""
+    required_reviewers: int = 1
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -37,6 +38,7 @@ class Config:
             ),
             default_private=data.get("default_private", False),
             github_token=data.get("github_token", ""),
+            required_reviewers=data.get("required_reviewers", 1),
             extra={
                 k: v
                 for k, v in data.items()
@@ -48,6 +50,7 @@ class Config:
                     "python_version",
                     "default_private",
                     "github_token",
+                    "required_reviewers",
                 }
             },
         )
@@ -61,5 +64,6 @@ class Config:
             f'python_version = "{self.python_version}"\n',
             f"default_private = {str(self.default_private).lower()}\n",
             f'github_token = "{self.github_token}"\n',
+            f"required_reviewers = {self.required_reviewers}\n",
         ]
         CONFIG_FILE.write_text("".join(lines))
