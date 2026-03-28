@@ -40,6 +40,11 @@ def _client() -> httpx.Client:
     )
 
 
+def get_client() -> httpx.Client:
+    """Return an authenticated httpx client."""
+    return _client()
+
+
 def create_repo(
     name: str,
     description: str = "",
@@ -82,3 +87,15 @@ def create_repo(
             )
             raise typer.Exit(code=1)
         return response.json()
+
+
+def get_authenticated_user(client: httpx.Client) -> str:
+    """Return the authenticated GitHub username."""
+    response = client.get("/user")
+    if not response.is_success:
+        typer.echo(
+            "Error: could not fetch GitHub user - check you token.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+    return response.json()["login"]
