@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 CONFIG_DIR = Path.home() / ".scaffoldr"
 CONFIG_FILE = CONFIG_DIR / "config.toml"
