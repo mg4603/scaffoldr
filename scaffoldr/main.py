@@ -1,23 +1,26 @@
 from __future__ import annotations
 
-import typer
-from typing import Optional
-from pathlib import Path
 import subprocess
+from pathlib import Path
+from typing import Optional
+
+import typer
 
 from scaffoldr.config import (
-    Config,
     CONFIG_FILE,
     DEFAULT_LICENSE,
     DEFAULT_PYTHON_VERSION,
+    Config,
 )
-from scaffoldr.local import scaffold as _scaffold
 from scaffoldr.github import (
     create_repo as _create_repo,
-    get_client,
+)
+from scaffoldr.github import (
     get_authenticated_user,
+    get_client,
 )
 from scaffoldr.issues import create_issues as _create_issues
+from scaffoldr.local import scaffold as _scaffold
 from scaffoldr.protection import protect_branch as _protect_branch
 
 app = typer.Typer(

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import tomllib
-from pathlib import Path
-
 import typer
 
 from scaffoldr.config import CONFIG_DIR

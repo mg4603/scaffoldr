@@ -7,11 +7,11 @@ import typer
 
 from scaffoldr.config import Config
 from scaffoldr.templates import (
-    readme,
-    contributing,
-    pyproject,
     adr_template,
+    contributing,
     gitignore,
+    pyproject,
+    readme,
 )
 
 
