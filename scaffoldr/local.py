@@ -9,6 +9,7 @@ from scaffoldr.config import Config
 from scaffoldr.templates import (
     adr_template,
     contributing,
+    github_actions_ci,
     gitignore,
     pyproject,
     readme,
@@ -45,6 +46,7 @@ def scaffold(project_name: str, path: Path) -> None:
     (root / project_name).mkdir(parents=True)
     (root / "tests").mkdir()
     (root / "docs" / "adr").mkdir(parents=True)
+    (root / ".github" / "workflows").mkdir(parents=True)
 
     # files
     (root / "README.md").write_text(readme(project_name, cfg.author))
@@ -60,6 +62,9 @@ def scaffold(project_name: str, path: Path) -> None:
     (root / ".gitignore").write_text(gitignore())
     (root / "tests" / "__init__.py").write_text("")
     (root / project_name / "__init__.py").write_text("")
+    (root / ".github" / "workflows" / "ci.yml").write_text(
+        github_actions_ci(project_name, cfg.python_version)
+    )
 
     # git
     _git(["init"], cwd=root)
