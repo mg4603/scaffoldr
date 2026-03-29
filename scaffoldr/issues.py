@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-import tomllib
-from pathlib import Path
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 import typer
 

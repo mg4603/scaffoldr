@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from scaffoldr.local import scaffold
 from scaffoldr.config import Config
+from scaffoldr.local import scaffold
 
 DUMMY_CONFIG = Config(
     author="Test User",

@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-import tomllib
-from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
-from scaffoldr.config import Config, DEFAULT_LICENSE
+from scaffoldr.config import DEFAULT_LICENSE, Config
 
 
 def test_config_defaults():

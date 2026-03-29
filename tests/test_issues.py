@@ -6,9 +6,9 @@ import click
 import pytest
 
 from scaffoldr.issues import (
-    resolve_templates,
     DEFAULT_ISSUES,
     create_issues,
+    resolve_templates,
 )
 
 
