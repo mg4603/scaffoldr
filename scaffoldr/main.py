@@ -18,6 +18,7 @@ from scaffoldr.github import (
     get_authenticated_user,
 )
 from scaffoldr.issues import create_issues as _create_issues
+from scaffoldr.protection import protect_branch as _protect_branch
 
 app = typer.Typer(
     name="scaffoldr",
@@ -48,6 +49,9 @@ def config_init(
     github_token: str = typer.Option(
         "", prompt="GitHub token (leave blank to skip)"
     ),
+    required_reviewers: int = typer.Option(
+        1, prompt="Required PR reviewers"
+    ),
 ) -> None:
     """Create ~/.scaffoldr/config.toml interactively."""
     if CONFIG_FILE.exists():
@@ -64,6 +68,7 @@ def config_init(
         license=license,
         default_private=default_private,
         github_token=github_token or "",
+        required_reviewers=required_reviewers,
     )
     cfg.write()
     typer.echo(f"Config written to {CONFIG_FILE}.")
@@ -73,17 +78,18 @@ def config_init(
 def config_show() -> None:
     """Print current config values."""
     cfg = Config.load()
-    typer.echo(f"author          = {cfg.author!r}")
-    typer.echo(f"github_username = {cfg.github_username!r}")
-    typer.echo(f"python_version  = {cfg.python_version!r}")
-    typer.echo(f"license         = {cfg.license!r}")
-    typer.echo(f"default_private = {cfg.default_private}")
+    typer.echo(f"author             = {cfg.author!r}")
+    typer.echo(f"github_username    = {cfg.github_username!r}")
+    typer.echo(f"python_version     = {cfg.python_version!r}")
+    typer.echo(f"license            = {cfg.license!r}")
+    typer.echo(f"default_private    = {cfg.default_private}")
+    typer.echo(f"required_reviewers = {cfg.required_reviewers}")
     masked = (
         cfg.github_token[:4] + "****"
         if cfg.github_token
         else "(not set)"
     )
-    typer.echo(f"github_token    = {masked}")
+    typer.echo(f"github_token       = {masked}")
 
 
 @issues_app.command("create")
@@ -130,6 +136,9 @@ def new(
     path: Path = typer.Option(
         Path("."), help="Where to create the project locally"
     ),
+    protect: bool = typer.Option(
+        True, help="Enable branch protection on main."
+    ),
 ) -> None:
     """
     Scaffold a new project locally and create a
@@ -156,9 +165,19 @@ def new(
         ["git", "push", "-u", "origin", "main"], cwd=root, check=True
     )
 
-    typer.echo("Creating issues...")
     with get_client() as client:
         owner = get_authenticated_user(client)
+
+        typer.echo("Creating issues...")
         _create_issues(owner, project_name, client)
+
+        if protect:
+            typer.echo("Setting branch protection...")
+            _protect_branch(
+                owner,
+                project_name,
+                client,
+                required_reviewers=cfg.required_reviewers,
+            )
 
     typer.echo(f"Repo ready: {repo['html_url']}")
