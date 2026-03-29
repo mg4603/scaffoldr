@@ -12,6 +12,7 @@ def test_config_defaults():
     assert cfg.license == DEFAULT_LICENSE
     assert cfg.python_version == "3.10"
     assert cfg.default_private is False
+    assert cfg.use_ssh is True
 
 
 def test_config_load_missing_file(tmp_path):
@@ -35,6 +36,7 @@ def test_config_write_and_load(tmp_path):
             license="Apache-2.0",
             python_version="3.11",
             default_private=True,
+            use_ssh=False,
         )
         cfg.write()
         loaded = Config.load()
@@ -44,3 +46,4 @@ def test_config_write_and_load(tmp_path):
     assert loaded.license == "Apache-2.0"
     assert loaded.python_version == "3.11"
     assert loaded.default_private is True
+    assert loaded.use_ssh is False

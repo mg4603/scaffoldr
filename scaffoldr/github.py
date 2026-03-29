@@ -27,7 +27,7 @@ def _get_token() -> str:
 
 
 def _client() -> httpx.Client:
-    token = _get_token(0)
+    token = _get_token()
     return httpx.Client(
         base_url=GITHUB_API,
         headers={
@@ -85,6 +85,7 @@ def create_repo(
                 err=True,
             )
             raise typer.Exit(code=1)
+
         return response.json()
 
 

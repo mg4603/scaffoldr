@@ -13,11 +13,12 @@ from scaffoldr.config import (
     Config,
 )
 from scaffoldr.github import (
-    create_repo as _create_repo,
-)
-from scaffoldr.github import (
+    _get_token,
     get_authenticated_user,
     get_client,
+)
+from scaffoldr.github import (
+    create_repo as _create_repo,
 )
 from scaffoldr.issues import create_issues as _create_issues
 from scaffoldr.local import scaffold as _scaffold
@@ -55,6 +56,9 @@ def config_init(
     required_reviewers: int = typer.Option(
         1, prompt="Required PR reviewers"
     ),
+    use_ssh: bool = typer.Option(
+        True, prompt="Use SSH for git remote?"
+    ),
 ) -> None:
     """Create ~/.scaffoldr/config.toml interactively."""
     if CONFIG_FILE.exists():
@@ -72,6 +76,7 @@ def config_init(
         default_private=default_private,
         github_token=github_token or "",
         required_reviewers=required_reviewers,
+        use_ssh=use_ssh,
     )
     cfg.write()
     typer.echo(f"Config written to {CONFIG_FILE}.")
@@ -87,6 +92,7 @@ def config_show() -> None:
     typer.echo(f"license            = {cfg.license!r}")
     typer.echo(f"default_private    = {cfg.default_private}")
     typer.echo(f"required_reviewers = {cfg.required_reviewers}")
+    typer.echo(f"use_ssh            = {cfg.use_ssh}")
     masked = (
         cfg.github_token[:4] + "****"
         if cfg.github_token
@@ -158,7 +164,17 @@ def new(
     )
 
     root = path / project_name
-    remote_url = repo["clone_url"]
+    ssh_url = repo["ssh_url"]
+    clone_url = repo["clone_url"]
+
+    if cfg.use_ssh:
+        remote_url = ssh_url
+    else:
+        token = _get_token()
+        remote_url = clone_url.replace(
+            "https://", f"https://{cfg.github_username}:{token}@"
+        )
+
     subprocess.run(
         ["git", "remote", "add", "origin", remote_url],
         cwd=root,
@@ -167,6 +183,13 @@ def new(
     subprocess.run(
         ["git", "push", "-u", "origin", "main"], cwd=root, check=True
     )
+
+    if not cfg.use_ssh:
+        subprocess.run(
+            ["git", "remote", "set-url", "origin", clone_url],
+            cwd=root,
+            check=True,
+        )
 
     with get_client() as client:
         owner = get_authenticated_user(client)
