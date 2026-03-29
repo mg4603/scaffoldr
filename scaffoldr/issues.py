@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
 import typer
 
 from scaffoldr.config import CONFIG_DIR
