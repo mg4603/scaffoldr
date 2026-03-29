@@ -130,3 +130,58 @@ build/
 .pytest-cache/
 .ruff-cache/
 """
+
+
+def github_actions_ci(project_name: str, python_version: str) -> str:
+    return f"""\
+name: CI
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
+
+jobs:
+    test:
+        name: Test (Python ${{{{ matrix.python-version }}}})
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                python-version: ["{python_version}"]
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python ${{{{ matrix.python-version }}}}
+              uses: actions/setup-python@v5
+              with:
+                python-version: ${{{{ matrix.python-version }}}}
+
+            - name: Configure git identity for tests
+              run: |
+                git config --global user.email "ci@{project_name}.com"
+                git config --global user.name "CI"
+
+            - name: Install dependencies
+              run: pip install -e ".[dev]"
+
+            - name: Run tests
+              run: pytest tests/ -v
+
+    lint:
+         name: Lint
+         runs-on: ubuntu-latest
+
+         steps:
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: "{python_version}"
+
+            - name: Install ruff
+              run: pip install ruff>=0.4.0
+
+            - name: Run ruff
+              run: ruff check .
+"""

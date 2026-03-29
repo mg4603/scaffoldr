@@ -64,3 +64,12 @@ def test_already_exists_raises(tmp_path):
         scaffold("myproject", tmp_path)
         with pytest.raises(click.exceptions.Exit):
             scaffold("myproject", tmp_path)
+
+
+def test_ci_workflow_created(project):
+    assert (project / ".github" / "workflows" / "ci.yml").exists()
+
+
+def test_ci_workflow_contains_python_version(project):
+    content = (project / ".github" / "workflows" / "ci.yml").read_text()
+    assert DUMMY_CONFIG.python_version in content
