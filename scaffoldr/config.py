@@ -24,6 +24,7 @@ class Config:
     default_private: bool = False
     github_token: str = ""
     required_reviewers: int = 1
+    use_ssh: bool = True
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -42,6 +43,7 @@ class Config:
             default_private=data.get("default_private", False),
             github_token=data.get("github_token", ""),
             required_reviewers=data.get("required_reviewers", 1),
+            use_ssh=data.get("use_ssh", True),
             extra={
                 k: v
                 for k, v in data.items()
@@ -54,6 +56,7 @@ class Config:
                     "default_private",
                     "github_token",
                     "required_reviewers",
+                    "use_ssh",
                 }
             },
         )
@@ -68,5 +71,6 @@ class Config:
             f"default_private = {str(self.default_private).lower()}\n",
             f'github_token = "{self.github_token}"\n',
             f"required_reviewers = {self.required_reviewers}\n",
+            f"use_ssh = {str(self.use_ssh).lower()}\n",
         ]
         CONFIG_FILE.write_text("".join(lines))
