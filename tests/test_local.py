@@ -73,3 +73,8 @@ def test_ci_workflow_created(project):
 def test_ci_workflow_contains_python_version(project):
     content = (project / ".github" / "workflows" / "ci.yml").read_text()
     assert DUMMY_CONFIG.python_version in content
+
+
+def test_ci_workflow_contains_explicit_installs(project):
+    content = (project / ".github" / "workflows" / "ci.yml").read_text()
+    assert "pip install ruff pytest" in content
