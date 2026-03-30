@@ -14,7 +14,7 @@ pip install {project_name}
 
 ## Usage
 ```bash
-{project_name} -- help
+{project_name} --help
 ````
 
 ## Development
@@ -164,7 +164,9 @@ jobs:
                 git config --global user.name "CI"
 
             - name: Install dependencies
-              run: pip install -e ".[dev]"
+              run: |
+                pip install -e ".[dev]"
+                pip install ruff pytest
 
             - name: Run tests
               run: pytest tests/ -v
