@@ -18,7 +18,10 @@ def protect_branch(
     response = client.put(
         f"/repos/{owner}/{repo}/branches/{branch}/protection",
         json={
-            "required_status_check": None,
+            "required_status_checks": {
+                "strict": False,
+                "contexts": [],
+            },
             "enforce_admins": False,
             "required_pull_request_reviews": {
                 "required_approving_review_count": (required_reviewers),
