@@ -80,9 +80,10 @@ license = {{text = "{license_}"}}
 requires-python = ">={python_version}"
 dependencies = []
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+    "ruff>=0.4.0",
 ]
 """
 
