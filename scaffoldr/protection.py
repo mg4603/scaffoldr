@@ -28,22 +28,6 @@ def protect_branch(
             "restrictions": None,
         },
     )
-
-    if response.status_code == 403:
-        typer.echo(
-            "Error: insufficient permissions to set "
-            "branch protection. Token need repo admin "
-            "scope",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-
-    if response.status_code == 404:
-        typer.echo(
-            f"Error: '{branch}' not found on {owner}/{repo}.", err=True
-        )
-        raise typer.Exit(code=1)
-
     if not response.is_success:
         typer.echo(
             f"Error: Failed to set branch protection "
