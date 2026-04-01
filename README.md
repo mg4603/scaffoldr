@@ -15,6 +15,9 @@ Most projects start with `git init` and a blank README.
 - Default issues so that you have a backlog immediately
 - Branch protection on main so nothing gets pushed directly
 
+## Demo
+![demo](demo.gif)
+
 ## Installation
 ```bash
 pipx install scaffoldr
