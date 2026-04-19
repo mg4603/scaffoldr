@@ -147,7 +147,7 @@ New titles are added alongside the defaults.
 git clone https://github.com/mg4603/scaffoldr.git
 cd scaffoldr
 python -m venv .venv
-souce .venv/bin/activate
+source .venv/bin/activate
 pip install -e ".[dev]"
 pytest tests/ -v
 ```
