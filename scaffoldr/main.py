@@ -7,6 +7,7 @@ from typing import Optional
 import typer
 
 from scaffoldr.config import (
+    CONFIG_DIR,
     CONFIG_FILE,
     DEFAULT_LICENSE,
     DEFAULT_PYTHON_VERSION,
@@ -30,11 +31,40 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+
+def check_legacy_config():
+    legacy_path = Path.home() / ".scaffoldr"
+    if legacy_path.exists():
+        typer.echo(
+            f"Config directory changed from {legacy_path} to"
+            f" {CONFIG_DIR}."
+            "\nRun `scaffoldr config migrate` to move existing"
+            " config.",
+            err=True,
+        )
+        raise typer.Abort()
+
+
 config_app = typer.Typer(name="config", help="Manage scaffoldr config.")
 app.add_typer(config_app)
 
+
 issues_app = typer.Typer(name="issues", help="Manage GitHub issues.")
 app.add_typer(issues_app)
+
+
+@app.callback()
+def app_callback(ctx: typer.Context):
+    if ctx.invoked_subcommand == "config":
+        return
+    check_legacy_config()
+
+
+@config_app.callback()
+def config_callback(ctx: typer.Context):
+    if ctx.invoked_subcommand == "migrate":
+        return
+    check_legacy_config()
 
 
 @config_app.command("init")
