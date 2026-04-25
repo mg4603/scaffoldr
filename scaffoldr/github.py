@@ -66,14 +66,16 @@ def create_repo(
 
         if response.status_code == 422:
             typer.echo(
-                f"Error: repo '{name}' already exists on GitHub.",
+                f"Error: repo '{name}' already exists"
+                " on GitHub.",
                 err=True,
             )
             raise typer.Exit(code=1)
 
         if response.status_code == 401:
             typer.echo(
-                "Error: invald or expired GitHub token.", err=True
+                "Error: invald or expired GitHub token.",
+                err=True,
             )
             raise typer.Exit(code=1)
 
@@ -94,7 +96,8 @@ def get_authenticated_user(client: httpx.Client) -> str:
     response = client.get("/user")
     if not response.is_success:
         typer.echo(
-            "Error: could not fetch GitHub user - check you token.",
+            "Error: could not fetch GitHub user - check"
+            " you token.",
             err=True,
         )
         raise typer.Exit(code=1)

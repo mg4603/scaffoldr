@@ -26,8 +26,8 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 72
-target-version = "py310"
+line-length = 64
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]

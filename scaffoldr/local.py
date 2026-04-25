@@ -24,7 +24,9 @@ def _git(args: list[str], cwd: Path) -> None:
         text=True,
     )
     if result.returncode != 0:
-        typer.echo(f"git error: {result.stderr.strip()}", err=True)
+        typer.echo(
+            f"git error: {result.stderr.strip()}", err=True
+        )
         raise typer.Exit(code=1)
 
 
@@ -49,16 +51,23 @@ def scaffold(project_name: str, path: Path) -> None:
     (root / ".github" / "workflows").mkdir(parents=True)
 
     # files
-    (root / "README.md").write_text(readme(project_name, cfg.author))
-    (root / "CONTRIBUTING.md").write_text(contributing(project_name))
+    (root / "README.md").write_text(
+        readme(project_name, cfg.author)
+    )
+    (root / "CONTRIBUTING.md").write_text(
+        contributing(project_name)
+    )
     (root / "pyproject.toml").write_text(
         pyproject(
-            project_name, cfg.author, cfg.python_version, cfg.license
+            project_name,
+            cfg.author,
+            cfg.python_version,
+            cfg.license,
         )
     )
-    (root / "docs" / "adr" / "0001-initial-decisions.md").write_text(
-        adr_template(project_name)
-    )
+    (
+        root / "docs" / "adr" / "0001-initial-decisions.md"
+    ).write_text(adr_template(project_name))
     (root / ".gitignore").write_text(gitignore())
     (root / "tests" / "__init__.py").write_text("")
     (root / project_name / "__init__.py").write_text("")

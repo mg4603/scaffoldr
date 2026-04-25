@@ -44,7 +44,9 @@ class Config:
             ),
             default_private=data.get("default_private", False),
             github_token=data.get("github_token", ""),
-            required_reviewers=data.get("required_reviewers", 1),
+            required_reviewers=data.get(
+                "required_reviewers", 1
+            ),
             use_ssh=data.get("use_ssh", True),
             extra={
                 k: v
@@ -70,6 +72,7 @@ class Config:
             f'github_username = "{self.github_username}"\n',
             f'license = "{self.license}"\n',
             f'python_version = "{self.python_version}"\n',
+            # ruff: noqa: E501
             f"default_private = {str(self.default_private).lower()}\n",
             f'github_token = "{self.github_token}"\n',
             f"required_reviewers = {self.required_reviewers}\n",

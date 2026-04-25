@@ -24,7 +24,9 @@ def protect_branch(
             },
             "enforce_admins": False,
             "required_pull_request_reviews": {
-                "required_approving_review_count": (required_reviewers),
+                "required_approving_review_count": (
+                    required_reviewers
+                ),
                 "dismiss_stale_reviews": False,
                 "required_code_owner_reviews": False,
             },
