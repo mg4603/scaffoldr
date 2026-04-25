@@ -102,7 +102,7 @@ def config_init(
         True, prompt="Use SSH for git remote?"
     ),
 ) -> None:
-    """Create ~/.scaffoldr/config.toml interactively."""
+    """Create ~/.config/scaffoldr/config.toml interactively."""
     if CONFIG_FILE.exists():
         overwrite = typer.confirm(
             f"{CONFIG_FILE} already exists. Overwrite?"
