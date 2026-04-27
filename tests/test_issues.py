@@ -13,7 +13,9 @@ from scaffoldr.issues import (
 
 
 def test_resolve_templates_returns_defaults():
-    with patch("scaffoldr.issues._load_user_issues", return_value=[]):
+    with patch(
+        "scaffoldr.issues._load_user_issues", return_value=[]
+    ):
         templates = resolve_templates()
     assert templates == DEFAULT_ISSUES
 
@@ -24,7 +26,8 @@ def test_user_templates_override_defaults():
         "body": "custom body",
     }
     with patch(
-        "scaffoldr.issues._load_user_issues", return_value=[user_issue]
+        "scaffoldr.issues._load_user_issues",
+        return_value=[user_issue],
     ):
         templates = resolve_templates()
 
@@ -44,7 +47,8 @@ def test_user_templates_extend_defaults():
         "body": "custom body",
     }
     with patch(
-        "scaffoldr.issues._load_user_issues", return_value=[user_issue]
+        "scaffoldr.issues._load_user_issues",
+        return_value=[user_issue],
     ):
         templates = resolve_templates()
 
@@ -66,7 +70,9 @@ def test_create_issues_success():
     }
     mock_client.post.return_value = mock_response
 
-    with patch("scaffoldr.issues._load_user_issues", return_value=[]):
+    with patch(
+        "scaffoldr.issues._load_user_issues", return_value=[]
+    ):
         created = create_issues("user", "repo", mock_client)
 
     assert len(created) == len(DEFAULT_ISSUES)
@@ -79,6 +85,8 @@ def test_create_issues_rate_limited():
     mock_response.is_success = False
     mock_client.post.return_value = mock_response
 
-    with patch("scaffoldr.issues._load_user_issues", return_value=[]):
+    with patch(
+        "scaffoldr.issues._load_user_issues", return_value=[]
+    ):
         with pytest.raises(click.exceptions.Exit):
             create_issues("user", "repo", mock_client)

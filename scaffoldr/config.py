@@ -3,12 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from platformdirs import user_config_dir
+
 try:
     import tomllib
 except ImportError:
     import tomli as tomllib
 
-CONFIG_DIR = Path.home() / ".scaffoldr"
+CONFIG_DIR = Path(user_config_dir("scaffoldr"))
 CONFIG_FILE = CONFIG_DIR / "config.toml"
 
 DEFAULT_PYTHON_VERSION = "3.10"
@@ -42,7 +44,9 @@ class Config:
             ),
             default_private=data.get("default_private", False),
             github_token=data.get("github_token", ""),
-            required_reviewers=data.get("required_reviewers", 1),
+            required_reviewers=data.get(
+                "required_reviewers", 1
+            ),
             use_ssh=data.get("use_ssh", True),
             extra={
                 k: v
@@ -68,6 +72,7 @@ class Config:
             f'github_username = "{self.github_username}"\n',
             f'license = "{self.license}"\n',
             f'python_version = "{self.python_version}"\n',
+            # ruff: noqa: E501
             f"default_private = {str(self.default_private).lower()}\n",
             f'github_token = "{self.github_token}"\n',
             f"required_reviewers = {self.required_reviewers}\n",

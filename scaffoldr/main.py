@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from shutil import copy2 as shutil_copy2
+from shutil import rmtree as shutil_rmtree
 from typing import Optional
 
 import typer
 
 from scaffoldr.config import (
+    CONFIG_DIR,
     CONFIG_FILE,
     DEFAULT_LICENSE,
     DEFAULT_PYTHON_VERSION,
@@ -22,7 +25,9 @@ from scaffoldr.github import (
 )
 from scaffoldr.issues import create_issues as _create_issues
 from scaffoldr.local import scaffold as _scaffold
-from scaffoldr.protection import protect_branch as _protect_branch
+from scaffoldr.protection import (
+    protect_branch as _protect_branch,
+)
 
 app = typer.Typer(
     name="scaffoldr",
@@ -30,20 +35,57 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-config_app = typer.Typer(name="config", help="Manage scaffoldr config.")
+
+def check_legacy_config():
+    legacy_path = Path.home() / ".scaffoldr"
+    if legacy_path.exists():
+        typer.echo(
+            f"Config directory changed from {legacy_path} to"
+            f" {CONFIG_DIR}."
+            "\nRun `scaffoldr config migrate` to move existing"
+            " config.",
+            err=True,
+        )
+        raise typer.Abort()
+
+
+config_app = typer.Typer(
+    name="config", help="Manage scaffoldr config."
+)
 app.add_typer(config_app)
 
-issues_app = typer.Typer(name="issues", help="Manage GitHub issues.")
+
+issues_app = typer.Typer(
+    name="issues", help="Manage GitHub issues."
+)
 app.add_typer(issues_app)
+
+
+@app.callback()
+def app_callback(ctx: typer.Context):
+    if ctx.invoked_subcommand == "config":
+        return
+    check_legacy_config()
+
+
+@config_app.callback()
+def config_callback(ctx: typer.Context):
+    if ctx.invoked_subcommand == "migrate":
+        return
+    check_legacy_config()
 
 
 @config_app.command("init")
 def config_init(
-    author: Optional[str] = typer.Option(None, prompt="Author name"),
+    author: Optional[str] = typer.Option(
+        None, prompt="Author name"
+    ),
     github_username: Optional[str] = typer.Option(
         None, prompt="GitHub username"
     ),
-    license: str = typer.Option(DEFAULT_LICENSE, prompt="License"),
+    license: str = typer.Option(
+        DEFAULT_LICENSE, prompt="License"
+    ),
     python_version: str = typer.Option(
         DEFAULT_PYTHON_VERSION, prompt="Python version"
     ),
@@ -60,7 +102,7 @@ def config_init(
         True, prompt="Use SSH for git remote?"
     ),
 ) -> None:
-    """Create ~/.scaffoldr/config.toml interactively."""
+    """Create ~/.config/scaffoldr/config.toml interactively."""
     if CONFIG_FILE.exists():
         overwrite = typer.confirm(
             f"{CONFIG_FILE} already exists. Overwrite?"
@@ -101,6 +143,53 @@ def config_show() -> None:
     typer.echo(f"github_token       = {masked}")
 
 
+@config_app.command()
+def migrate() -> None:
+    legacy_path = Path.home() / ".scaffoldr"
+    if not legacy_path.exists():
+        typer.echo("Legacy config does not exist.")
+        return
+
+    if CONFIG_DIR.exists():
+        overwrite = typer.confirm(
+            f"{CONFIG_DIR} already exists. Overwrite?"
+        )
+        if not overwrite:
+            raise typer.Abort()
+
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+    for item in legacy_path.rglob("*"):
+        relative_path = item.relative_to(legacy_path)
+        destination_item = CONFIG_DIR / relative_path
+
+        if item.is_file():
+            destination_item.parent.mkdir(
+                parents=True, exist_ok=True
+            )
+            shutil_copy2(item, destination_item)
+        else:
+            destination_item.mkdir(parents=True, exist_ok=True)
+
+    try:
+        shutil_rmtree(legacy_path)
+        typer.echo(f"Successfully removed {legacy_path}")
+    except PermissionError:
+        typer.echo(
+            f"Permission denied when removing {legacy_path}",
+            err=True,
+        )
+        raise typer.Abort()
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Abort()
+
+    typer.echo(
+        "Config files migrated successfully from "
+        f"{legacy_path} to {CONFIG_DIR}"
+    )
+
+
 @issues_app.command("create")
 def issues_create(
     repo: str = typer.Argument(
@@ -138,7 +227,9 @@ def new(
     project_name: str = typer.Argument(
         ..., help="Name of the new project"
     ),
-    description: str = typer.Option("", help="GitHub repo description"),
+    description: str = typer.Option(
+        "", help="GitHub repo description"
+    ),
     private: Optional[bool] = typer.Option(
         None, help="Override default_private from config"
     ),
@@ -154,13 +245,17 @@ def new(
     GitHub repo for it.
     """
     cfg = Config.load()
-    is_private = private if private is not None else cfg.default_private
+    is_private = (
+        private if private is not None else cfg.default_private
+    )
 
     _scaffold(project_name, path)
 
     typer.echo("Creating GitHub repo...")
     repo = _create_repo(
-        name=project_name, description=description, private=is_private
+        name=project_name,
+        description=description,
+        private=is_private,
     )
 
     root = path / project_name
@@ -172,7 +267,8 @@ def new(
     else:
         token = _get_token()
         remote_url = clone_url.replace(
-            "https://", f"https://{cfg.github_username}:{token}@"
+            "https://",
+            f"https://{cfg.github_username}:{token}@",
         )
 
     subprocess.run(
@@ -181,7 +277,9 @@ def new(
         check=True,
     )
     subprocess.run(
-        ["git", "push", "-u", "origin", "main"], cwd=root, check=True
+        ["git", "push", "-u", "origin", "main"],
+        cwd=root,
+        check=True,
     )
 
     if not cfg.use_ssh:

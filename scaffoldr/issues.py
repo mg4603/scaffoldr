@@ -67,7 +67,9 @@ def resolve_templates() -> list[dict]:
     user_issues = _load_user_issues()
     user_titles = {i["title"] for i in user_issues}
     merged = [
-        i for i in DEFAULT_ISSUES if i["title"] not in user_titles
+        i
+        for i in DEFAULT_ISSUES
+        if i["title"] not in user_titles
     ]
     merged.extend(user_issues)
     return merged
@@ -98,7 +100,9 @@ def create_issues(owner: str, repo: str, client) -> list[dict]:
             raise typer.Exit(code=1)
 
         if response.status_code == 403:
-            typer.echo("Error: rate limited by GitHub API.", err=True)
+            typer.echo(
+                "Error: rate limited by GitHub API.", err=True
+            )
             raise typer.Exit(code=1)
 
         if not response.is_success:
@@ -112,6 +116,8 @@ def create_issues(owner: str, repo: str, client) -> list[dict]:
 
         issue = response.json()
         created.append(issue)
-        typer.echo(f"Created: #{issue['number']} {issue['title']}")
+        typer.echo(
+            f"Created: #{issue['number']} {issue['title']}"
+        )
 
     return created

@@ -16,14 +16,19 @@ def test_create_repo_success():
     }
 
     with (
-        patch("scaffoldr.github._get_token", return_value="fake-token"),
+        patch(
+            "scaffoldr.github._get_token",
+            return_value="fake-token",
+        ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
         from scaffoldr.github import create_repo
 
         result = create_repo("myrepo")
 
-    assert result["html_url"] == ("https://github.com/user/myrepo")
+    assert result["html_url"] == (
+        "https://github.com/user/myrepo"
+    )
 
 
 def test_create_repo_already_exists():
@@ -32,7 +37,10 @@ def test_create_repo_already_exists():
     mock_response.is_success = False
 
     with (
-        patch("scaffoldr.github._get_token", return_value="fake-token"),
+        patch(
+            "scaffoldr.github._get_token",
+            return_value="fake-token",
+        ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
         from scaffoldr.github import create_repo
@@ -47,7 +55,10 @@ def test_create_repo_invalid_token():
     mock_response.is_succes = False
 
     with (
-        patch("scaffoldr.github._get_token", return_vlaue="fake-token"),
+        patch(
+            "scaffoldr.github._get_token",
+            return_vlaue="fake-token",
+        ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
         from scaffoldr.github import create_repo

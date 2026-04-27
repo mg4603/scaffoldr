@@ -64,7 +64,10 @@ pytest
 
 
 def pyproject(
-    project_name: str, author: str, python_version: str, license_: str
+    project_name: str,
+    author: str,
+    python_version: str,
+    license_: str,
 ) -> str:
     return f"""\
 [build-system]
@@ -133,7 +136,10 @@ build/
 """
 
 
-def github_actions_ci(project_name: str, python_version: str) -> str:
+def github_actions_ci(
+    project_name: str, python_version: str
+) -> str:
+    # ruff: noqa: E501
     return f"""\
 name: CI
 
