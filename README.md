@@ -19,13 +19,11 @@ Most projects start with `git init` and a blank README.
 ![demo](demo.gif)
 
 ## Installation
+Clone the repo and install locally:
 ```bash
-pipx install scaffoldr
-```
-
-Or with pip:
-```bash
-pip install scaffoldr
+git clone https://github.com/mg4603/scaffoldr.git
+cd scaffoldr
+pipx install .
 ```
 
 ## Quickstart
