@@ -1,4 +1,3 @@
-name = "default"
 description = "default scaffolding for python project"
 
 [[files]]
