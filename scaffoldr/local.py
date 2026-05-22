@@ -6,13 +6,11 @@ from pathlib import Path
 import typer
 
 from scaffoldr.config import Config
-from scaffoldr.templates import (
-    adr_template,
-    contributing,
-    github_actions_ci,
-    gitignore,
-    pyproject,
-    readme,
+from scaffoldr.template_hander import (
+    Template,
+    load_template,
+    render_template,
+    resolve_template_path,
 )
 
 
@@ -30,7 +28,9 @@ def _git(args: list[str], cwd: Path) -> None:
         raise typer.Exit(code=1)
 
 
-def scaffold(project_name: str, path: Path) -> None:
+def scaffold(
+    project_name: str, template_name: str, path: Path
+) -> None:
     """
     Create a new project at path/project_name with
     opinionated folder structure and initial git commit
@@ -44,36 +44,23 @@ def scaffold(project_name: str, path: Path) -> None:
 
     typer.echo(f"Creating project at {root} ...")
 
-    # folders
-    (root / project_name).mkdir(parents=True)
-    (root / "tests").mkdir()
-    (root / "docs" / "adr").mkdir(parents=True)
-    (root / ".github" / "workflows").mkdir(parents=True)
+    scaffold_variables = {
+        "project_name": project_name,
+        "author": cfg.author,
+        "python_version": cfg.python_version,
+        "license_": cfg.license,
+    }
 
-    # files
-    (root / "README.md").write_text(
-        readme(project_name, cfg.author)
+    template_path = resolve_template_path(template_name)
+    template: Template = load_template(template_path)
+    rendered_template = render_template(
+        template, scaffold_variables
     )
-    (root / "CONTRIBUTING.md").write_text(
-        contributing(project_name)
-    )
-    (root / "pyproject.toml").write_text(
-        pyproject(
-            project_name,
-            cfg.author,
-            cfg.python_version,
-            cfg.license,
-        )
-    )
-    (
-        root / "docs" / "adr" / "0001-initial-decisions.md"
-    ).write_text(adr_template(project_name))
-    (root / ".gitignore").write_text(gitignore())
-    (root / "tests" / "__init__.py").write_text("")
-    (root / project_name / "__init__.py").write_text("")
-    (root / ".github" / "workflows" / "ci.yml").write_text(
-        github_actions_ci(project_name, cfg.python_version)
-    )
+
+    for path_str, content in rendered_template.items():
+        path = Path(path_str)
+        (root / path.parent).mkdir(parents=True, exist_ok=True)
+        (root / path).write_text(content)
 
     # git
     _git(["init"], cwd=root)
