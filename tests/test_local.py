@@ -21,7 +21,7 @@ def project(tmp_path):
     with patch(
         "scaffoldr.local.Config.load", return_value=DUMMY_CONFIG
     ):
-        scaffold("myproject", tmp_path)
+        scaffold("myproject", "default", tmp_path)
     return tmp_path / "myproject"
 
 
@@ -61,9 +61,9 @@ def test_already_exists_raises(tmp_path):
     with patch(
         "scaffoldr.local.Config.load", return_value=DUMMY_CONFIG
     ):
-        scaffold("myproject", tmp_path)
+        scaffold("myproject", "default", tmp_path)
         with pytest.raises(click.exceptions.Exit):
-            scaffold("myproject", tmp_path)
+            scaffold("myproject", "default", tmp_path)
 
 
 def test_ci_workflow_created(project):
