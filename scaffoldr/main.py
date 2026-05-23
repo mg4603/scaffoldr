@@ -13,6 +13,7 @@ from scaffoldr.config import (
     CONFIG_FILE,
     DEFAULT_LICENSE,
     DEFAULT_PYTHON_VERSION,
+    USER_DEFINED_TEMPLATES_PATH,
     Config,
 )
 from scaffoldr.exceptions import TemplateError
@@ -62,8 +63,15 @@ issues_app = typer.Typer(
 app.add_typer(issues_app)
 
 
+def ensure_dirs():
+    USER_DEFINED_TEMPLATES_PATH.mkdir(
+        parent=True, exist_ok=True
+    )
+
+
 @app.callback()
 def app_callback(ctx: typer.Context):
+    ensure_dirs()
     if ctx.invoked_subcommand == "config":
         return
     check_legacy_config()
