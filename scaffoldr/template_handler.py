@@ -1,4 +1,4 @@
-from importlib.resrouce import files
+from importlib.resources import files
 from pathlib import Path
 from tomllib import TOMLDecodeError
 from tomllib import load as toml_load
