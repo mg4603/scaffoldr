@@ -13,6 +13,8 @@ except ImportError:
 CONFIG_DIR = Path(user_config_dir("scaffoldr"))
 CONFIG_FILE = CONFIG_DIR / "config.toml"
 
+USER_DEFINED_TEMPLATES_PATH = CONFIG_DIR / "templates"
+
 DEFAULT_PYTHON_VERSION = "3.10"
 DEFAULT_LICENSE = "MIT"
 

@@ -13,8 +13,10 @@ from scaffoldr.config import (
     CONFIG_FILE,
     DEFAULT_LICENSE,
     DEFAULT_PYTHON_VERSION,
+    USER_DEFINED_TEMPLATES_PATH,
     Config,
 )
+from scaffoldr.exceptions import TemplateError
 from scaffoldr.github import (
     _get_token,
     get_authenticated_user,
@@ -61,8 +63,15 @@ issues_app = typer.Typer(
 app.add_typer(issues_app)
 
 
+def ensure_dirs():
+    USER_DEFINED_TEMPLATES_PATH.mkdir(
+        parent=True, exist_ok=True
+    )
+
+
 @app.callback()
 def app_callback(ctx: typer.Context):
+    ensure_dirs()
     if ctx.invoked_subcommand == "config":
         return
     check_legacy_config()
@@ -214,12 +223,19 @@ def init(
     project_name: str = typer.Argument(
         ..., help="Name of the new project"
     ),
+    template: str = typer.Option(
+        "default", help="default template"
+    ),
     path: Path = typer.Option(
         Path("."), help="Where to create the project"
     ),
 ) -> None:
     """Scaffold a new project locally."""
-    _scaffold(project_name, path)
+    try:
+        _scaffold(project_name, template, path)
+    except TemplateError as e:
+        typer.echo(e, err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command("new")
@@ -232,6 +248,9 @@ def new(
     ),
     private: Optional[bool] = typer.Option(
         None, help="Override default_private from config"
+    ),
+    template: str = typer.Option(
+        "default", help="default template"
     ),
     path: Path = typer.Option(
         Path("."), help="Where to create the project locally"
@@ -248,8 +267,11 @@ def new(
     is_private = (
         private if private is not None else cfg.default_private
     )
-
-    _scaffold(project_name, path)
+    try:
+        _scaffold(project_name, template, path)
+    except TemplateError as e:
+        typer.echo(e, err=True)
+        raise typer.Exit(code=1)
 
     typer.echo("Creating GitHub repo...")
     repo = _create_repo(

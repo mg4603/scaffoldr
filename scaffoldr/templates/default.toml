@@ -1,8 +1,8 @@
-from __future__ import annotations
+description = "default scaffolding for python project"
 
-
-def readme(project_name: str, author: str) -> str:
-    return f"""\
+[[files]]
+path = "README.md"
+content = """
 # {project_name}
 
 > Short description of what this project does.
@@ -27,9 +27,9 @@ contribution guidelines.
 {author} - MIT
 """
 
-
-def contributing(project_name: str) -> str:
-    return f"""\
+[[files]]
+path = "CONTRIBUTING.md"
+content = """
 # Contributing to {project_name}
 
 ## Branch Naming
@@ -51,7 +51,7 @@ Follow conventional commits:
 
 ## Pull Requests
 
-1. Branch off meain
+1. Branch off main
 2. Make your changes
 3. Open a PR referencing the related issue
 4. PR title should follow the commit message format
@@ -62,14 +62,9 @@ pytest
 ```
 """
 
-
-def pyproject(
-    project_name: str,
-    author: str,
-    python_version: str,
-    license_: str,
-) -> str:
-    return f"""\
+[[files]]
+path = "pyproject.toml"
+content = """
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -88,11 +83,12 @@ dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
 ]
+
 """
 
-
-def adr_template(project_name: str) -> str:
-    return f"""\
+[[files]]
+path = "docs/adr/0001-initial-decisions.md"
+content = """
 # ADR 0001: Initial decisions for {project_name}
 
 **Status: Draft**
@@ -119,11 +115,12 @@ Describes the decision made.
 
 ### Negative
 ...
+
 """
 
-
-def gitignore() -> str:
-    return """\
+[[files]]
+path = ".gitignore"
+content = """
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -133,14 +130,12 @@ build/
 .env
 .pytest-cache/
 .ruff-cache/
+
 """
 
-
-def github_actions_ci(
-    project_name: str, python_version: str
-) -> str:
-    # ruff: noqa: E501
-    return f"""\
+[[files]]
+path = ".github/workflows/ci.yml"
+content = """
 name: CI
 
 on:
@@ -193,4 +188,13 @@ jobs:
 
             - name: Run ruff
               run: ruff check .
+
 """
+
+[[files]]
+path = "tests/__init__.py"
+content = ""
+
+[[files]]
+path = "{project_name}/__init__.py"
+content = ""
