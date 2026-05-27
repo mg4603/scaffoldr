@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from scaffoldr.config import DEFAULT_LICENSE, Config
+from scaffoldr.user_config import DEFAULT_LICENSE, Config
 
 
 def test_config_defaults():
@@ -17,7 +17,9 @@ def test_config_defaults():
 
 def test_config_load_missing_file(tmp_path):
     fake_config = tmp_path / "config.toml"
-    with patch("scaffoldr.config.CONFIG_FILE", fake_config):
+    with patch(
+        "scaffoldr.user_config.CONFIG_FILE", fake_config
+    ):
         cfg = Config.load()
     assert cfg.author == ""
 
@@ -27,8 +29,8 @@ def test_config_write_and_load(tmp_path):
     fake_dir = tmp_path
 
     with (
-        patch("scaffoldr.config.CONFIG_FILE", fake_config),
-        patch("scaffoldr.config.CONFIG_DIR", fake_dir),
+        patch("scaffoldr.user_config.CONFIG_FILE", fake_config),
+        patch("scaffoldr.user_config.CONFIG_DIR", fake_dir),
     ):
         cfg = Config(
             author="Test User",

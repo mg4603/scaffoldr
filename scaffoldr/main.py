@@ -65,7 +65,7 @@ app.add_typer(issues_app)
 
 def ensure_dirs():
     USER_DEFINED_TEMPLATES_PATH.mkdir(
-        parent=True, exist_ok=True
+        parents=True, exist_ok=True
     )
 
 

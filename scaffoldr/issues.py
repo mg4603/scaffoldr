@@ -7,7 +7,7 @@ except ImportError:
 
 import typer
 
-from scaffoldr.config import CONFIG_DIR
+from scaffoldr.user_config import CONFIG_DIR
 
 ISSUES_FILE = CONFIG_DIR / "issues.toml"
 

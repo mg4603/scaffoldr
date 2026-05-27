@@ -5,7 +5,7 @@ import os
 import httpx
 import typer
 
-from scaffoldr.config import Config
+from scaffoldr.user_config import Config
 
 GITHUB_API = "https://api.github.com"
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import typer
 
-from scaffoldr.config import Config
+from scaffoldr.user_config import Config
 from scaffoldr.template_handler import (
     Template,
     load_template,
