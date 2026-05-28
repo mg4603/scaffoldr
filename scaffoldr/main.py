@@ -13,7 +13,6 @@ from scaffoldr.config import (
     CONFIG_FILE,
     DEFAULT_LICENSE,
     DEFAULT_PYTHON_VERSION,
-    USER_DEFINED_TEMPLATES_PATH,
     Config,
 )
 from scaffoldr.exceptions import TemplateError
@@ -30,25 +29,13 @@ from scaffoldr.local import scaffold as _scaffold
 from scaffoldr.protection import (
     protect_branch as _protect_branch,
 )
+from scaffoldr.utils import check_legacy_config, ensure_dirs
 
 app = typer.Typer(
     name="scaffoldr",
     help="Scaffold new projects with opinionated structure.",
     no_args_is_help=True,
 )
-
-
-def check_legacy_config():
-    legacy_path = Path.home() / ".scaffoldr"
-    if legacy_path.exists():
-        typer.echo(
-            f"Config directory changed from {legacy_path} to"
-            f" {CONFIG_DIR}."
-            "\nRun `scaffoldr config migrate` to move existing"
-            " config.",
-            err=True,
-        )
-        raise typer.Abort()
 
 
 config_app = typer.Typer(
@@ -61,12 +48,6 @@ issues_app = typer.Typer(
     name="issues", help="Manage GitHub issues."
 )
 app.add_typer(issues_app)
-
-
-def ensure_dirs():
-    USER_DEFINED_TEMPLATES_PATH.mkdir(
-        parents=True, exist_ok=True
-    )
 
 
 @app.callback()
