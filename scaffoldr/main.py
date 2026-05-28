@@ -2,19 +2,11 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from shutil import copy2 as shutil_copy2
-from shutil import rmtree as shutil_rmtree
 from typing import Optional
 
 import typer
 
-from scaffoldr.config import (
-    CONFIG_DIR,
-    CONFIG_FILE,
-    DEFAULT_LICENSE,
-    DEFAULT_PYTHON_VERSION,
-    Config,
-)
+from scaffoldr.config import app as config_app
 from scaffoldr.exceptions import TemplateError
 from scaffoldr.github import (
     _get_token,
@@ -29,6 +21,9 @@ from scaffoldr.local import scaffold as _scaffold
 from scaffoldr.protection import (
     protect_branch as _protect_branch,
 )
+from scaffoldr.user_config import (
+    Config,
+)
 from scaffoldr.utils import check_legacy_config, ensure_dirs
 
 app = typer.Typer(
@@ -38,10 +33,7 @@ app = typer.Typer(
 )
 
 
-config_app = typer.Typer(
-    name="config", help="Manage scaffoldr config."
-)
-app.add_typer(config_app)
+app.add_typer(config_app, name="config")
 
 
 issues_app = typer.Typer(
@@ -56,128 +48,6 @@ def app_callback(ctx: typer.Context):
     if ctx.invoked_subcommand == "config":
         return
     check_legacy_config()
-
-
-@config_app.callback()
-def config_callback(ctx: typer.Context):
-    if ctx.invoked_subcommand == "migrate":
-        return
-    check_legacy_config()
-
-
-@config_app.command("init")
-def config_init(
-    author: Optional[str] = typer.Option(
-        None, prompt="Author name"
-    ),
-    github_username: Optional[str] = typer.Option(
-        None, prompt="GitHub username"
-    ),
-    license: str = typer.Option(
-        DEFAULT_LICENSE, prompt="License"
-    ),
-    python_version: str = typer.Option(
-        DEFAULT_PYTHON_VERSION, prompt="Python version"
-    ),
-    default_private: bool = typer.Option(
-        False, prompt="Private repos by default?"
-    ),
-    github_token: str = typer.Option(
-        "", prompt="GitHub token (leave blank to skip)"
-    ),
-    required_reviewers: int = typer.Option(
-        1, prompt="Required PR reviewers"
-    ),
-    use_ssh: bool = typer.Option(
-        True, prompt="Use SSH for git remote?"
-    ),
-) -> None:
-    """Create ~/.config/scaffoldr/config.toml interactively."""
-    if CONFIG_FILE.exists():
-        overwrite = typer.confirm(
-            f"{CONFIG_FILE} already exists. Overwrite?"
-        )
-        if not overwrite:
-            raise typer.Abort()
-
-    cfg = Config(
-        author=author or "",
-        github_username=github_username or "",
-        python_version=python_version,
-        license=license,
-        default_private=default_private,
-        github_token=github_token or "",
-        required_reviewers=required_reviewers,
-        use_ssh=use_ssh,
-    )
-    cfg.write()
-    typer.echo(f"Config written to {CONFIG_FILE}.")
-
-
-@config_app.command("show")
-def config_show() -> None:
-    """Print current config values."""
-    cfg = Config.load()
-    typer.echo(f"author             = {cfg.author!r}")
-    typer.echo(f"github_username    = {cfg.github_username!r}")
-    typer.echo(f"python_version     = {cfg.python_version!r}")
-    typer.echo(f"license            = {cfg.license!r}")
-    typer.echo(f"default_private    = {cfg.default_private}")
-    typer.echo(f"required_reviewers = {cfg.required_reviewers}")
-    typer.echo(f"use_ssh            = {cfg.use_ssh}")
-    masked = (
-        cfg.github_token[:4] + "****"
-        if cfg.github_token
-        else "(not set)"
-    )
-    typer.echo(f"github_token       = {masked}")
-
-
-@config_app.command()
-def migrate() -> None:
-    legacy_path = Path.home() / ".scaffoldr"
-    if not legacy_path.exists():
-        typer.echo("Legacy config does not exist.")
-        return
-
-    if CONFIG_DIR.exists():
-        overwrite = typer.confirm(
-            f"{CONFIG_DIR} already exists. Overwrite?"
-        )
-        if not overwrite:
-            raise typer.Abort()
-
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-
-    for item in legacy_path.rglob("*"):
-        relative_path = item.relative_to(legacy_path)
-        destination_item = CONFIG_DIR / relative_path
-
-        if item.is_file():
-            destination_item.parent.mkdir(
-                parents=True, exist_ok=True
-            )
-            shutil_copy2(item, destination_item)
-        else:
-            destination_item.mkdir(parents=True, exist_ok=True)
-
-    try:
-        shutil_rmtree(legacy_path)
-        typer.echo(f"Successfully removed {legacy_path}")
-    except PermissionError:
-        typer.echo(
-            f"Permission denied when removing {legacy_path}",
-            err=True,
-        )
-        raise typer.Abort()
-    except Exception as e:
-        typer.echo(f"Error: {e}", err=True)
-        raise typer.Abort()
-
-    typer.echo(
-        "Config files migrated successfully from "
-        f"{legacy_path} to {CONFIG_DIR}"
-    )
 
 
 @issues_app.command("create")
