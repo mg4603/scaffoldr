@@ -16,7 +16,10 @@ from scaffoldr.github import (
 from scaffoldr.github import (
     create_repo as _create_repo,
 )
-from scaffoldr.issues import create_issues as _create_issues
+from scaffoldr.issue_handler import (
+    create_issues as _create_issues,
+)
+from scaffoldr.issues import app as issues_app
 from scaffoldr.local import scaffold as _scaffold
 from scaffoldr.protection import (
     protect_branch as _protect_branch,
@@ -34,12 +37,7 @@ app = typer.Typer(
 
 
 app.add_typer(config_app, name="config")
-
-
-issues_app = typer.Typer(
-    name="issues", help="Manage GitHub issues."
-)
-app.add_typer(issues_app)
+app.add_typer(issues_app, name="issues")
 
 
 @app.callback()
@@ -48,25 +46,6 @@ def app_callback(ctx: typer.Context):
     if ctx.invoked_subcommand == "config":
         return
     check_legacy_config()
-
-
-@issues_app.command("create")
-def issues_create(
-    repo: str = typer.Argument(
-        ..., help="Repo name (owner/repo or just repo)"
-    ),
-) -> None:
-    """Create default issues on an existing GitHub repo."""
-    with get_client() as client:
-        if "/" in repo:
-            owner, repo_name = repo.split("/", 1)
-        else:
-            owner = get_authenticated_user(client)
-            repo_name = repo
-
-        typer.echo(f"Creating issues on {owner}/{repo_name}...")
-        created = _create_issues(owner, repo_name, client)
-        typer.echo(f"Done. {len(created)} issues created.")
 
 
 @app.command("init")
