@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from scaffoldr.user_config import Config
 from scaffoldr.local import scaffold
+from scaffoldr.user_config import Config
 
 DUMMY_CONFIG = Config(
     author="Test User",

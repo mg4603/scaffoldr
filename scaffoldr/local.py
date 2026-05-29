@@ -5,13 +5,13 @@ from pathlib import Path
 
 import typer
 
-from scaffoldr.user_config import Config
 from scaffoldr.template_handler import (
     Template,
     load_template,
     render_template,
     resolve_template_path,
 )
+from scaffoldr.user_config import Config
 
 
 def _git(args: list[str], cwd: Path) -> None:
