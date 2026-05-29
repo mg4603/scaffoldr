@@ -14,8 +14,8 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-app.add_typer(init_app, name="init")
-app.add_typer(new_app, name="new")
+app.add_typer(init_app)
+app.add_typer(new_app)
 app.add_typer(config_app, name="config")
 app.add_typer(issues_app, name="issues")
 
