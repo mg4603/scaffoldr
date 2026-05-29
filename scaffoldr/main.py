@@ -16,6 +16,7 @@ from scaffoldr.github import (
 from scaffoldr.github import (
     create_repo as _create_repo,
 )
+from scaffoldr.init import app as init_app
 from scaffoldr.issue_handler import (
     create_issues as _create_issues,
 )
@@ -35,7 +36,7 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-
+app.add_typer(init_app, name="init")
 app.add_typer(config_app, name="config")
 app.add_typer(issues_app, name="issues")
 
@@ -46,26 +47,6 @@ def app_callback(ctx: typer.Context):
     if ctx.invoked_subcommand == "config":
         return
     check_legacy_config()
-
-
-@app.command("init")
-def init(
-    project_name: str = typer.Argument(
-        ..., help="Name of the new project"
-    ),
-    template: str = typer.Option(
-        "default", help="default template"
-    ),
-    path: Path = typer.Option(
-        Path("."), help="Where to create the project"
-    ),
-) -> None:
-    """Scaffold a new project locally."""
-    try:
-        _scaffold(project_name, template, path)
-    except TemplateError as e:
-        typer.echo(e, err=True)
-        raise typer.Exit(code=1)
 
 
 @app.command("new")
