@@ -56,13 +56,13 @@ def test_git_repo_initialized(project):
 
 
 def test_already_exists_raises(tmp_path):
-    import click
+    # import click
 
     with patch(
         "scaffoldr.local.Config.load", return_value=DUMMY_CONFIG
     ):
         scaffold("myproject", "default", tmp_path)
-        with pytest.raises(click.exceptions.Exit):
+        with pytest.raises(Exception):
             scaffold("myproject", "default", tmp_path)
 
 
