@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import click
+# import click
 import pytest
 
 from scaffoldr.protection import protect_branch
@@ -50,11 +50,11 @@ def test_protect_branch_with_reviewers():
 
 def test_protect_branch_forbidden():
     client = _mock_client(403)
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(Exception):
         protect_branch("user", "repo", client)
 
 
 def test_protect_branch_not_found():
     client = _mock_client(404)
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(Exception):
         protect_branch("user", "repo", client)

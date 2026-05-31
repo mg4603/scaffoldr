@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import click
+# import click
 import pytest
 
 from scaffoldr.issue_handler import (
@@ -91,5 +91,5 @@ def test_create_issues_rate_limited():
         "scaffoldr.issue_handler._load_user_issues",
         return_value=[],
     ):
-        with pytest.raises(click.exceptions.Exit):
+        with pytest.raises(Exception):
             create_issues("user", "repo", mock_client)

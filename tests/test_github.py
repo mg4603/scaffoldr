@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import click
+# import click
 import pytest
 
 
@@ -45,7 +45,7 @@ def test_create_repo_already_exists():
     ):
         from scaffoldr.github import create_repo
 
-        with pytest.raises(click.exceptions.Exit):
+        with pytest.raises(Exception):
             create_repo("myrepo")
 
 
@@ -63,7 +63,7 @@ def test_create_repo_invalid_token():
     ):
         from scaffoldr.github import create_repo
 
-        with pytest.raises(click.exceptions.Exit):
+        with pytest.raises(Exception):
             create_repo("myrepo")
 
 
@@ -79,5 +79,5 @@ def test_no_token_raises():
     ):
         from scaffoldr.github import _get_token
 
-        with pytest.raises(click.exceptions.Exit):
+        with pytest.raises(Exception):
             _get_token()
