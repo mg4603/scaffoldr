@@ -23,6 +23,7 @@ scaffoldr = "scaffoldr.main:app"
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
+    "click>=8.4.1",
 ]
 
 [tool.ruff]
