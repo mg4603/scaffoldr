@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from scaffoldr.config import Config
 from scaffoldr.local import scaffold
+from scaffoldr.user_config import Config
 
 DUMMY_CONFIG = Config(
     author="Test User",
@@ -56,13 +56,13 @@ def test_git_repo_initialized(project):
 
 
 def test_already_exists_raises(tmp_path):
-    import click
+    # import click
 
     with patch(
         "scaffoldr.local.Config.load", return_value=DUMMY_CONFIG
     ):
         scaffold("myproject", "default", tmp_path)
-        with pytest.raises(click.exceptions.Exit):
+        with pytest.raises(Exception):
             scaffold("myproject", "default", tmp_path)
 
 

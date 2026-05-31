@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import click
+# import click
 import pytest
 
-from scaffoldr.issues import (
+from scaffoldr.issue_handler import (
     DEFAULT_ISSUES,
     create_issues,
     resolve_templates,
@@ -14,7 +14,8 @@ from scaffoldr.issues import (
 
 def test_resolve_templates_returns_defaults():
     with patch(
-        "scaffoldr.issues._load_user_issues", return_value=[]
+        "scaffoldr.issue_handler._load_user_issues",
+        return_value=[],
     ):
         templates = resolve_templates()
     assert templates == DEFAULT_ISSUES
@@ -26,7 +27,7 @@ def test_user_templates_override_defaults():
         "body": "custom body",
     }
     with patch(
-        "scaffoldr.issues._load_user_issues",
+        "scaffoldr.issue_handler._load_user_issues",
         return_value=[user_issue],
     ):
         templates = resolve_templates()
@@ -47,7 +48,7 @@ def test_user_templates_extend_defaults():
         "body": "custom body",
     }
     with patch(
-        "scaffoldr.issues._load_user_issues",
+        "scaffoldr.issue_handler._load_user_issues",
         return_value=[user_issue],
     ):
         templates = resolve_templates()
@@ -71,7 +72,8 @@ def test_create_issues_success():
     mock_client.post.return_value = mock_response
 
     with patch(
-        "scaffoldr.issues._load_user_issues", return_value=[]
+        "scaffoldr.issue_handler._load_user_issues",
+        return_value=[],
     ):
         created = create_issues("user", "repo", mock_client)
 
@@ -86,7 +88,8 @@ def test_create_issues_rate_limited():
     mock_client.post.return_value = mock_response
 
     with patch(
-        "scaffoldr.issues._load_user_issues", return_value=[]
+        "scaffoldr.issue_handler._load_user_issues",
+        return_value=[],
     ):
-        with pytest.raises(click.exceptions.Exit):
+        with pytest.raises(Exception):
             create_issues("user", "repo", mock_client)

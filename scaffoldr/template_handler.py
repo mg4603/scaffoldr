@@ -4,8 +4,8 @@ from tomllib import TOMLDecodeError
 from tomllib import load as toml_load
 from typing import Any, TypedDict
 
-from scaffoldr.config import USER_DEFINED_TEMPLATES_PATH
 from scaffoldr.exceptions import TemplateError
+from scaffoldr.user_config import USER_DEFINED_TEMPLATES_PATH
 
 BUILTIN_TEMPLATES_PATH = Path(
     files("scaffoldr").joinpath("templates")
