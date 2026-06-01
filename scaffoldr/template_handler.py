@@ -88,3 +88,31 @@ def render_template(
         ) from e
 
     return result
+
+
+def get_description(path: Path) -> str:
+    try:
+        with path.open("rb") as f:
+            data: dict[str, Any] = toml_load(f)
+            return data["description"]
+    except FileNotFoundError:
+        raise TemplateError(
+            f"Template file not found: {path.stem}"
+        )
+    except PermissionError:
+        raise TemplateError(
+            f"Permission denied reading template: {path.stem}"
+        )
+    except TOMLDecodeError as e:
+        raise TemplateError(
+            f"Invalid TOML in template file {path.stem}: {e}"
+        ) from e
+    except OSError as e:
+        raise TemplateError(
+            f"Failed to read template file {path.stem}: {e}"
+        ) from e
+    except KeyError:
+        raise TemplateError(
+            "Missing 'description' in template file "
+            f"{path.stem}"
+        )
