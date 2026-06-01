@@ -6,6 +6,7 @@ from scaffoldr.config import app as config_app
 from scaffoldr.init import app as init_app
 from scaffoldr.issues import app as issues_app
 from scaffoldr.new import app as new_app
+from scaffoldr.template import app as template_app
 from scaffoldr.utils import check_legacy_config, ensure_dirs
 
 app = typer.Typer(
@@ -18,6 +19,7 @@ app.add_typer(init_app)
 app.add_typer(new_app)
 app.add_typer(config_app, name="config")
 app.add_typer(issues_app, name="issues")
+app.add_typer(template_app, name="template")
 
 
 @app.callback()
