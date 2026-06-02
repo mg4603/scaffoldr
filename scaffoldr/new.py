@@ -8,7 +8,12 @@ from typer import Option as typer_option
 from typer import Typer
 from typer import echo as typer_echo
 
-from scaffoldr.exceptions import TemplateError
+from scaffoldr.exceptions import (
+    GitError,
+    GitHubError,
+    LocalError,
+    TemplateError,
+)
 from scaffoldr.github import (
     _get_token,
     get_authenticated_user,
@@ -65,61 +70,71 @@ def new(
     )
     try:
         _scaffold(project_name, template, path)
-    except TemplateError as e:
-        typer_echo(e, err=True)
-        raise typer_exit(code=1)
 
-    typer_echo("Creating GitHub repo...")
-    repo = _create_repo(
-        name=project_name,
-        description=description,
-        private=is_private,
-    )
-
-    root = path / project_name
-    ssh_url = repo["ssh_url"]
-    clone_url = repo["clone_url"]
-
-    if cfg.use_ssh:
-        remote_url = ssh_url
-    else:
-        token = _get_token()
-        remote_url = clone_url.replace(
-            "https://",
-            f"https://{cfg.github_username}:{token}@",
+        typer_echo("Creating GitHub repo...")
+        repo = _create_repo(
+            name=project_name,
+            description=description,
+            private=is_private,
         )
 
-    subprocess_run(
-        ["git", "remote", "add", "origin", remote_url],
-        cwd=root,
-        check=True,
-    )
-    subprocess_run(
-        ["git", "push", "-u", "origin", "main"],
-        cwd=root,
-        check=True,
-    )
+        root = path / project_name
+        ssh_url = repo["ssh_url"]
+        clone_url = repo["clone_url"]
 
-    if not cfg.use_ssh:
+        if cfg.use_ssh:
+            remote_url = ssh_url
+        else:
+            token = _get_token()
+            remote_url = clone_url.replace(
+                "https://",
+                f"https://{cfg.github_username}:{token}@",
+            )
+
         subprocess_run(
-            ["git", "remote", "set-url", "origin", clone_url],
+            ["git", "remote", "add", "origin", remote_url],
+            cwd=root,
+            check=True,
+        )
+        subprocess_run(
+            ["git", "push", "-u", "origin", "main"],
             cwd=root,
             check=True,
         )
 
-    with get_client() as client:
-        owner = get_authenticated_user(client)
-
-        typer_echo("Creating issues...")
-        _create_issues(owner, project_name, client)
-
-        if protect:
-            typer_echo("Setting branch protection...")
-            _protect_branch(
-                owner,
-                project_name,
-                client,
-                required_reviewers=cfg.required_reviewers,
+        if not cfg.use_ssh:
+            subprocess_run(
+                [
+                    "git",
+                    "remote",
+                    "set-url",
+                    "origin",
+                    clone_url,
+                ],
+                cwd=root,
+                check=True,
             )
 
-    typer_echo(f"Repo ready: {repo['html_url']}")
+        with get_client() as client:
+            owner = get_authenticated_user(client)
+
+            typer_echo("Creating issues...")
+            _create_issues(owner, project_name, client)
+
+            if protect:
+                typer_echo("Setting branch protection...")
+                _protect_branch(
+                    owner,
+                    project_name,
+                    client,
+                    required_reviewers=cfg.required_reviewers,
+                )
+        typer_echo(f"Repo ready: {repo['html_url']}")
+    except (
+        TemplateError,
+        GitHubError,
+        LocalError,
+        GitError,
+    ) as e:
+        typer_echo(e, err=True)
+        raise typer_exit(code=1)

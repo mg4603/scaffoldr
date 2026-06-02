@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-# import click
 import pytest
 
+from scaffoldr.exceptions import GitHubError
 from scaffoldr.issue_handler import (
     DEFAULT_ISSUES,
     create_issues,
@@ -91,5 +91,5 @@ def test_create_issues_rate_limited():
         "scaffoldr.issue_handler._load_user_issues",
         return_value=[],
     ):
-        with pytest.raises(Exception):
+        with pytest.raises(GitHubError):
             create_issues("user", "repo", mock_client)

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-import typer
+from typer import echo as typer_echo
+
+from scaffoldr.exceptions import GitHubError
 
 
 def protect_branch(
@@ -34,14 +36,12 @@ def protect_branch(
         },
     )
     if not response.is_success:
-        typer.echo(
+        raise GitHubError(
             f"Error: Failed to set branch protection "
             f"- {response.status_code}: {response.text}",
-            err=True,
         )
-        raise typer.Exit(code=1)
 
-    typer.echo(
+    typer_echo(
         f"Branch protection enabled on '{branch}' "
         f" ({required_reviewers} reviewer(s) required)."
     )

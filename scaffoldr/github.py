@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 
 import httpx
-import typer
 
+from scaffoldr.exceptions import GitHubError
 from scaffoldr.user_config import Config
 
 GITHUB_API = "https://api.github.com"
@@ -17,13 +17,12 @@ def _get_token() -> str:
     cfg = Config.load()
     if cfg.github_token:
         return cfg.github_token
-    typer.echo(
+
+    raise GitHubError(
         "Error no GitHub token found.\n"
         "Set SCAFFOLDR_GITHUB_TOKEN env var or run "
         "`scaffoldr config init` to save a token.",
-        err=True,
     )
-    raise typer.Exit(code=1)
 
 
 def _client() -> httpx.Client:
@@ -65,28 +64,22 @@ def create_repo(
         )
 
         if response.status_code == 422:
-            typer.echo(
+            raise GitHubError(
                 f"Error: repo '{name}' already exists"
                 " on GitHub.",
-                err=True,
             )
-            raise typer.Exit(code=1)
 
         if response.status_code == 401:
-            typer.echo(
+            raise GitHubError(
                 "Error: invald or expired GitHub token.",
-                err=True,
             )
-            raise typer.Exit(code=1)
 
         if not response.is_success:
-            typer.echo(
+            raise GitHubError(
                 f"Error: GitHub API returned "
                 f"{response.status_code} - "
                 f"{response.text}",
-                err=True,
             )
-            raise typer.Exit(code=1)
 
         return response.json()
 
@@ -95,10 +88,8 @@ def get_authenticated_user(client: httpx.Client) -> str:
     """Return the authenticated GitHub username."""
     response = client.get("/user")
     if not response.is_success:
-        typer.echo(
+        raise GitHubError(
             "Error: could not fetch GitHub user - check"
             " you token.",
-            err=True,
         )
-        raise typer.Exit(code=1)
     return response.json()["login"]

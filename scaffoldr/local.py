@@ -5,6 +5,7 @@ from pathlib import Path
 
 import typer
 
+from scaffoldr.exceptions import GitError, LocalError
 from scaffoldr.template_handler import (
     Template,
     load_template,
@@ -22,10 +23,9 @@ def _git(args: list[str], cwd: Path) -> None:
         text=True,
     )
     if result.returncode != 0:
-        typer.echo(
+        raise GitError(
             f"git error: {result.stderr.strip()}", err=True
         )
-        raise typer.Exit(code=1)
 
 
 def scaffold(
@@ -39,8 +39,7 @@ def scaffold(
     root = path / project_name
 
     if root.exists():
-        typer.echo(f"Error: {root} already exists.", err=True)
-        raise typer.Exit(code=1)
+        raise LocalError(f"Error: {root} already exists.")
 
     typer.echo(f"Creating project at {root} ...")
 

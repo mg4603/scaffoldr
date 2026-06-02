@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from scaffoldr.exceptions import LocalError
 from scaffoldr.local import scaffold
 from scaffoldr.user_config import Config
 
@@ -56,13 +57,12 @@ def test_git_repo_initialized(project):
 
 
 def test_already_exists_raises(tmp_path):
-    # import click
 
     with patch(
         "scaffoldr.local.Config.load", return_value=DUMMY_CONFIG
     ):
         scaffold("myproject", "default", tmp_path)
-        with pytest.raises(Exception):
+        with pytest.raises(LocalError):
             scaffold("myproject", "default", tmp_path)
 
 
