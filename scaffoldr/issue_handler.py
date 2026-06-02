@@ -5,8 +5,9 @@ try:
 except ImportError:
     import tomli as tomllib
 
-import typer
+from typer import echo as typer_echo
 
+from scaffoldr.exceptions import GitHubError
 from scaffoldr.user_config import CONFIG_DIR
 
 ISSUES_FILE = CONFIG_DIR / "issues.toml"
@@ -93,30 +94,25 @@ def create_issues(owner: str, repo: str, client) -> list[dict]:
         )
 
         if response.status_code == 410:
-            typer.echo(
+            raise GitHubError(
                 "Error: issues are disabled on this repo.",
-                err=True,
             )
-            raise typer.Exit(code=1)
 
         if response.status_code == 403:
-            typer.echo(
-                "Error: rate limited by GitHub API.", err=True
+            raise GitHubError(
+                "Error: rate limited by GitHub API.",
             )
-            raise typer.Exit(code=1)
 
         if not response.is_success:
-            typer.echo(
+            raise GitHubError(
                 f"Error: failed to create issue "
                 f"'{template['title']}' - "
                 f"{response.status_code}",
-                err=True,
             )
-            raise typer.Exit(code=1)
 
         issue = response.json()
         created.append(issue)
-        typer.echo(
+        typer_echo(
             f"Created: #{issue['number']} {issue['title']}"
         )
 
