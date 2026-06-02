@@ -6,7 +6,11 @@ from typer import Option as typer_option
 from typer import Typer
 from typer import echo as typer_echo
 
-from scaffoldr.exceptions import TemplateError
+from scaffoldr.exceptions import (
+    GitError,
+    LocalError,
+    TemplateError,
+)
 from scaffoldr.local import scaffold as _scaffold
 
 app = Typer(help="Scaffold a new project locally.")
@@ -27,6 +31,6 @@ def init(
     """Scaffold a new project locally."""
     try:
         _scaffold(project_name, template, path)
-    except TemplateError as e:
+    except (TemplateError, LocalError, GitError) as e:
         typer_echo(e, err=True)
         raise typer_exit(code=1)
