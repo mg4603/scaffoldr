@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-# import click
 import pytest
 
+from scaffoldr.exceptions import GitHubError
 from scaffoldr.protection import protect_branch
 
 
@@ -50,11 +50,11 @@ def test_protect_branch_with_reviewers():
 
 def test_protect_branch_forbidden():
     client = _mock_client(403)
-    with pytest.raises(Exception):
+    with pytest.raises(GitHubError):
         protect_branch("user", "repo", client)
 
 
 def test_protect_branch_not_found():
     client = _mock_client(404)
-    with pytest.raises(Exception):
+    with pytest.raises(GitHubError):
         protect_branch("user", "repo", client)
