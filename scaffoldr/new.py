@@ -130,6 +130,7 @@ def new(
                     project_name,
                     client,
                     required_reviewers=cfg.required_reviewers,
+                    progress=typer_echo,
                 )
         typer_echo(f"Repo ready: {repo['html_url']}")
     except (

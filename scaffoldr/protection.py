@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typer import echo as typer_echo
+from collections.abc import Callable
 
 from scaffoldr.exceptions import GitHubError
 
@@ -11,6 +11,7 @@ def protect_branch(
     client,
     branch: str = "main",
     required_reviewers: int = 1,
+    progress: Callable[[str], None] = lambda _: None,
 ) -> None:
     """
     Apply branch protection rules to the given branch.
@@ -41,7 +42,7 @@ def protect_branch(
             f"- {response.status_code}: {response.text}",
         )
 
-    typer_echo(
+    progress(
         f"Branch protection enabled on '{branch}' "
         f" ({required_reviewers} reviewer(s) required)."
     )
