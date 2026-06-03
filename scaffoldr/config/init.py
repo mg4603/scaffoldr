@@ -16,6 +16,16 @@ from scaffoldr.user_config import (
 app = Typer()
 
 
+@app.callback()
+def check_config_existence():
+    if CONFIG_FILE.exists():
+        overwrite = typer_confirm(
+            f"{CONFIG_FILE} already exists. Overwrite?"
+        )
+        if not overwrite:
+            raise typer_abort()
+
+
 @app.command()
 def init(
     author: Optional[str] = typer_option(
@@ -44,13 +54,6 @@ def init(
     ),
 ) -> None:
     """Create ~/.config/scaffoldr/config.toml interactively."""
-    if CONFIG_FILE.exists():
-        overwrite = typer_confirm(
-            f"{CONFIG_FILE} already exists. Overwrite?"
-        )
-        if not overwrite:
-            raise typer_abort()
-
     cfg = Config(
         author=author or "",
         github_username=github_username or "",
