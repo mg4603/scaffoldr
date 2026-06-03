@@ -69,7 +69,7 @@ def new(
         private if private is not None else cfg.default_private
     )
     try:
-        _scaffold(project_name, template, path)
+        _scaffold(project_name, template, path, typer_echo)
 
         typer_echo("Creating GitHub repo...")
         repo = _create_repo(

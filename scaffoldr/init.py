@@ -30,7 +30,7 @@ def init(
 ) -> None:
     """Scaffold a new project locally."""
     try:
-        _scaffold(project_name, template, path)
+        _scaffold(project_name, template, path, typer_echo)
     except (TemplateError, LocalError, GitError) as e:
         typer_echo(e, err=True)
         raise typer_exit(code=1)

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
-
-import typer
 
 from scaffoldr.exceptions import GitError, LocalError
 from scaffoldr.template_handler import (
@@ -29,7 +28,10 @@ def _git(args: list[str], cwd: Path) -> None:
 
 
 def scaffold(
-    project_name: str, template_name: str, path: Path
+    project_name: str,
+    template_name: str,
+    path: Path,
+    progress: Callable[[str], None] = lambda _: None,
 ) -> None:
     """
     Create a new project at path/project_name with
@@ -41,7 +43,7 @@ def scaffold(
     if root.exists():
         raise LocalError(f"Error: {root} already exists.")
 
-    typer.echo(f"Creating project at {root} ...")
+    progress(f"Creating project at {root} ...")
 
     scaffold_variables = {
         "project_name": project_name,
@@ -66,4 +68,4 @@ def scaffold(
     _git(["add", "."], cwd=root)
     _git(["commit", "-m", "chore: initial scaffold"], cwd=root)
 
-    typer.echo(f"Done. Project ready at {root}")
+    progress(f"Done. Project ready at {root}")
