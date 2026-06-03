@@ -119,7 +119,9 @@ def new(
             owner = get_authenticated_user(client)
 
             typer_echo("Creating issues...")
-            _create_issues(owner, project_name, client)
+            _create_issues(
+                owner, project_name, client, typer_echo
+            )
 
             if protect:
                 typer_echo("Setting branch protection...")

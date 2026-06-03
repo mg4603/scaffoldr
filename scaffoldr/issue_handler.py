@@ -5,7 +5,7 @@ try:
 except ImportError:
     import tomli as tomllib
 
-from typer import echo as typer_echo
+from collections.abc import Callable
 
 from scaffoldr.exceptions import GitHubError
 from scaffoldr.user_config import CONFIG_DIR
@@ -76,7 +76,12 @@ def resolve_templates() -> list[dict]:
     return merged
 
 
-def create_issues(owner: str, repo: str, client) -> list[dict]:
+def create_issues(
+    owner: str,
+    repo: str,
+    client,
+    progress: Callable[[str], None] = lambda _: None,
+) -> list[dict]:
     """
     Create issues on a GitHub repo using resolved templates.
     Returns list of created issue dicts.
@@ -112,7 +117,7 @@ def create_issues(owner: str, repo: str, client) -> list[dict]:
 
         issue = response.json()
         created.append(issue)
-        typer_echo(
+        progress(
             f"Created: #{issue['number']} {issue['title']}"
         )
 
