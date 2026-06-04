@@ -71,13 +71,16 @@ def test_create_issues_success():
     }
     mock_client.post.return_value = mock_response
 
+    progress = []
     with patch(
         "scaffoldr.issue_handler._load_user_issues",
         return_value=[],
     ):
-        created = create_issues("user", "repo", mock_client)
+        create_issues(
+            "user", "repo", mock_client, progress.append
+        )
 
-    assert len(created) == len(DEFAULT_ISSUES)
+    assert len(progress) == len(DEFAULT_ISSUES)
 
 
 def test_create_issues_rate_limited():
@@ -87,9 +90,13 @@ def test_create_issues_rate_limited():
     mock_response.is_success = False
     mock_client.post.return_value = mock_response
 
+    progress = []
     with patch(
         "scaffoldr.issue_handler._load_user_issues",
         return_value=[],
     ):
         with pytest.raises(GitHubError):
-            create_issues("user", "repo", mock_client)
+            create_issues(
+                "user", "repo", mock_client, progress.append
+            )
+    assert len(progress) == 0
