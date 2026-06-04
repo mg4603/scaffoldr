@@ -69,7 +69,7 @@ def new(
         private if private is not None else cfg.default_private
     )
     try:
-        _scaffold(project_name, template, path)
+        _scaffold(project_name, template, path, typer_echo)
 
         typer_echo("Creating GitHub repo...")
         repo = _create_repo(
@@ -119,7 +119,9 @@ def new(
             owner = get_authenticated_user(client)
 
             typer_echo("Creating issues...")
-            _create_issues(owner, project_name, client)
+            _create_issues(
+                owner, project_name, client, typer_echo
+            )
 
             if protect:
                 typer_echo("Setting branch protection...")
@@ -128,6 +130,7 @@ def new(
                     project_name,
                     client,
                     required_reviewers=cfg.required_reviewers,
+                    progress=typer_echo,
                 )
         typer_echo(f"Repo ready: {repo['html_url']}")
     except (

@@ -25,5 +25,7 @@ def create(
             repo_name = repo
 
         typer_echo(f"Creating issues on {owner}/{repo_name}...")
-        created = _create_issues(owner, repo_name, client)
+        created = _create_issues(
+            owner, repo_name, client, typer_echo
+        )
         typer_echo(f"Done. {len(created)} issues created.")
