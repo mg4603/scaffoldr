@@ -81,13 +81,12 @@ def create_issues(
     repo: str,
     client,
     progress: Callable[[str], None] = lambda _: None,
-) -> list[dict]:
+) -> None:
     """
     Create issues on a GitHub repo using resolved templates.
     Returns list of created issue dicts.
     """
     templates = resolve_templates()
-    created = []
 
     for template in templates:
         response = client.post(
@@ -116,9 +115,6 @@ def create_issues(
             )
 
         issue = response.json()
-        created.append(issue)
         progress(
             f"Created: #{issue['number']} {issue['title']}"
         )
-
-    return created
