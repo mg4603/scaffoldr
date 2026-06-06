@@ -22,9 +22,7 @@ def _git(args: list[str], cwd: Path) -> None:
         text=True,
     )
     if result.returncode != 0:
-        raise GitError(
-            f"git error: {result.stderr.strip()}", err=True
-        )
+        raise GitError(f"git error: {result.stderr.strip()}")
 
 
 def scaffold(
