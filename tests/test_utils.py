@@ -1,0 +1,29 @@
+from unittest.mock import patch
+
+import pytest
+from typer import Abort as typer_abort
+
+from scaffoldr.utils import check_legacy_config, ensure_dirs
+
+
+def test_ensure_dirs_success(tmp_path, monkeypatch):
+    user_templates = tmp_path / "templates"
+
+    monkeypatch.setattr(
+        "scaffoldr.utils.USER_DEFINED_TEMPLATES_PATH",
+        user_templates,
+    )
+
+    ensure_dirs()
+    assert user_templates.exists()
+
+
+def test_legacy_path_exists(tmp_path):
+    config_dir = tmp_path / ".scaffoldr"
+    config_dir.mkdir()
+
+    with patch(
+        "scaffoldr.utils.Path.home", return_value=tmp_path
+    ):
+        with pytest.raises(typer_abort):
+            check_legacy_config()
