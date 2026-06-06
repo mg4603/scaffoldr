@@ -87,3 +87,94 @@ def test_template_not_found_during_resolution(
         TemplateError, match="Template 'foo' not found"
     ):
         resolve_template_path("foo")
+
+
+def test_template_not_found_during_load(tmp_path):
+    template_dir = tmp_path / "templates"
+    template_dir.mkdir()
+
+    template_file = template_dir / "foo"
+
+    with pytest.raises(
+        TemplateError, match="Template file not found: foo"
+    ):
+        load_template(template_file)
+
+
+def test_permission_error_during_load(tmp_path):
+    template_dir = tmp_path / "templates"
+    template_dir.mkdir()
+
+    template_file = template_dir / "foo"
+    template_file.write_text('description="sample template"')
+
+    with patch.object(
+        Path, "open", side_effect=PermissionError("read denied")
+    ):
+        with pytest.raises(
+            TemplateError,
+            match="Permission denied reading template: foo",
+        ):
+            load_template(template_file)
+
+
+def test_toml_decode_error_during_load(tmp_path):
+    template_dir = tmp_path / "templates"
+    template_dir.mkdir()
+
+    template_file = template_dir / "foo"
+    template_file.write_text('description = "sample template"')
+
+    with patch(
+        "scaffoldr.template_handler.toml_load",
+        side_effect=TOMLDecodeError("simulated decode error"),
+    ):
+        with pytest.raises(
+            TemplateError,
+            match=(
+                "Invalid TOML in template file foo: "
+                "simulated decode error"
+            ),
+        ):
+            load_template(template_file)
+
+
+def test_os_error_during_load(tmp_path):
+    template_dir = tmp_path / "templates"
+    template_dir.mkdir()
+
+    template_file = template_dir / "foo"
+    template_file.write_text(
+        'description = "sample template file"'
+    )
+
+    with patch(
+        "scaffoldr.template_handler.toml_load",
+        side_effect=OSError("simulated OSError"),
+    ):
+        with pytest.raises(
+            TemplateError,
+            match=(
+                "Failed to read template file foo: "
+                "simulated OSError"
+            ),
+        ):
+            load_template(template_file)
+
+
+def test_missing_key_during_load(tmp_path):
+    template_dir = tmp_path / "templates"
+    template_dir.mkdir()
+
+    template_file = template_dir / "foo"
+    template_file.write_text(
+        'description = "sample template file"'
+    )
+
+    with pytest.raises(
+        TemplateError,
+        match=(
+            "Missing required key in template file foo: files"
+        ),
+    ):
+        load_template(template_file)
