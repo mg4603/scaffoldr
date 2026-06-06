@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from scaffoldr.exceptions import LocalError
-from scaffoldr.local import scaffold
+from scaffoldr.exceptions import GitError, LocalError
+from scaffoldr.local import _git, scaffold
 from scaffoldr.user_config import Config
 
 DUMMY_CONFIG = Config(
@@ -24,6 +24,22 @@ def project(tmp_path):
     ):
         scaffold("myproject", "default", tmp_path)
     return tmp_path / "myproject"
+
+
+def test_git_error_in_git_command_runner(tmp_path):
+    args = ["asdf"]
+    result = MagicMock()
+    result.returncode = 1
+    result.stderr = "some error"
+
+    with patch(
+        "scaffoldr.local.subprocess_run",
+        return_value=result,
+    ):
+        with pytest.raises(
+            GitError, match="git error: some error"
+        ):
+            _git(args, tmp_path)
 
 
 def test_folders_created(project):

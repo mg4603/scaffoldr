@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import subprocess
 from collections.abc import Callable
 from pathlib import Path
+from subprocess import run as subprocess_run
 
 from scaffoldr.exceptions import GitError, LocalError
 from scaffoldr.template_handler import (
@@ -15,7 +15,7 @@ from scaffoldr.user_config import Config
 
 
 def _git(args: list[str], cwd: Path) -> None:
-    result = subprocess.run(
+    result = subprocess_run(
         ["git", *args],
         cwd=cwd,
         capture_output=True,
