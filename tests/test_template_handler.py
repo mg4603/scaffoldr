@@ -6,7 +6,9 @@ import pytest
 
 from scaffoldr.exceptions import TemplateError
 from scaffoldr.template_handler import (
+    Template,
     load_template,
+    render_template,
     resolve_template_path,
 )
 
@@ -178,3 +180,30 @@ def test_missing_key_during_load(tmp_path):
         ),
     ):
         load_template(template_file)
+
+
+def test_key_error_during_render():
+    variables = {"foo": "bar"}
+    template: Template = {
+        "description": "Sample template",
+        "files": [{"path": "{name}.toml", "content": "sample"}],
+    }
+
+    with pytest.raises(
+        TemplateError,
+        match="Missing variable in template: 'name'",
+    ):
+        render_template(template, variables)
+
+
+def test_value_error_during_render():
+    variables = {"foo": "bar"}
+    template: Template = {
+        "description": "Sample template",
+        "files": [{"path": "{name.toml", "content": "sample"}],
+    }
+
+    with pytest.raises(
+        TemplateError, match="Template rendering failed: "
+    ):
+        render_template(template, variables)
