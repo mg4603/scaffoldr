@@ -53,12 +53,12 @@ def test_create_repo_already_exists():
 def test_create_repo_invalid_token():
     mock_response = MagicMock()
     mock_response.status_code = 401
-    mock_response.is_succes = False
+    mock_response.is_success = False
 
     with (
         patch(
             "scaffoldr.github._get_token",
-            return_vlaue="fake-token",
+            return_value="fake-token",
         ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
