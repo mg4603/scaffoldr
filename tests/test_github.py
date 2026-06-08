@@ -5,6 +5,24 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from scaffoldr.exceptions import GitHubError
+from scaffoldr.github import _get_token
+from scaffoldr.user_config import Config
+
+
+def test_get_token_from_env(monkeypatch):
+    monkeypatch.setenv("SCAFFOLDR_GITHUB_TOKEN", "env-token")
+
+    token = _get_token()
+    assert token == "env-token"
+
+
+def test_get_token_from_config():
+    mock_cfg = MagicMock()
+    mock_cfg.github_token = "config-token"
+
+    with patch.object(Config, "load", return_value=mock_cfg):
+        token = _get_token()
+        assert token == "config-token"
 
 
 def test_create_repo_success():
