@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch, sentinel
 import pytest
 
 from scaffoldr.exceptions import GitHubError
-from scaffoldr.github import _get_token, get_client
+from scaffoldr.github import _get_token, create_repo, get_client
 from scaffoldr.user_config import Config
 
 
@@ -51,8 +51,6 @@ def test_create_repo_success():
         ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
-        from scaffoldr.github import create_repo
-
         result = create_repo("myrepo")
 
     assert result["html_url"] == (
@@ -72,8 +70,6 @@ def test_create_repo_already_exists():
         ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
-        from scaffoldr.github import create_repo
-
         with pytest.raises(GitHubError):
             create_repo("myrepo")
 
@@ -90,9 +86,32 @@ def test_create_repo_invalid_token():
         ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
-        from scaffoldr.github import create_repo
-
         with pytest.raises(GitHubError):
+            create_repo("myrepo")
+
+
+def test_create_repo_non_422_401_error():
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+    mock_response.is_success = False
+    mock_response.text = "simulated error"
+
+    mock_client = MagicMock()
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+    mock_client.post.return_value = mock_response
+
+    with patch(
+        "scaffoldr.github._client",
+        return_value=mock_client,
+    ):
+        with pytest.raises(
+            GitHubError,
+            match=(
+                "Error: GitHub API returned "
+                "500 - simulated error"
+            ),
+        ):
             create_repo("myrepo")
 
 

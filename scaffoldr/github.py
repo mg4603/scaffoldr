@@ -76,7 +76,7 @@ def create_repo(
 
         if not response.is_success:
             raise GitHubError(
-                f"Error: GitHub API returned "
+                "Error: GitHub API returned "
                 f"{response.status_code} - "
                 f"{response.text}",
             )
