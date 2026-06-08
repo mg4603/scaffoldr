@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, sentinel
 
 import pytest
 
 from scaffoldr.exceptions import GitHubError
-from scaffoldr.github import _get_token
+from scaffoldr.github import _get_token, get_client
 from scaffoldr.user_config import Config
 
 
@@ -23,6 +23,16 @@ def test_get_token_from_config():
     with patch.object(Config, "load", return_value=mock_cfg):
         token = _get_token()
         assert token == "config-token"
+
+
+def test_get_client_returns_client():
+    with patch(
+        "scaffoldr.github._client", return_value=sentinel.client
+    ) as mock_client:
+        result = get_client()
+
+    mock_client.assert_called_once_with()
+    assert result == sentinel.client
 
 
 def test_create_repo_success():
