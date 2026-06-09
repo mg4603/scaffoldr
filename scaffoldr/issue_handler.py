@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
-
+import tomllib
 from collections.abc import Callable
 
 from scaffoldr.exceptions import GitHubError
