@@ -5,7 +5,12 @@ from unittest.mock import MagicMock, patch, sentinel
 import pytest
 
 from scaffoldr.exceptions import GitHubError
-from scaffoldr.github import _get_token, create_repo, get_client
+from scaffoldr.github import (
+    _get_token,
+    create_repo,
+    get_authenticated_user,
+    get_client,
+)
 from scaffoldr.user_config import Config
 
 
@@ -129,3 +134,35 @@ def test_no_token_raises():
 
         with pytest.raises(GitHubError):
             _get_token()
+
+
+def test_get_authenticated_user_returns_login():
+    mock_client = MagicMock()
+
+    mock_response = MagicMock()
+    mock_response.is_success = True
+    mock_response.json.return_value = {"login": "foo"}
+
+    mock_client.get.return_value = mock_response
+
+    assert get_authenticated_user(mock_client) == "foo"
+    mock_client.get.assert_called_once_with("/user")
+
+
+def test_get_authenticated_user_raises_on_error():
+    mock_client = MagicMock()
+
+    mock_response = MagicMock()
+    mock_response.is_success = False
+
+    mock_client.get.return_value = mock_response
+
+    with pytest.raises(
+        GitHubError,
+        match=(
+            "Error: could not fetch GitHub user - check "
+            "your token."
+        ),
+    ):
+        get_authenticated_user(mock_client)
+    mock_client.get.assert_called_once_with("/user")
