@@ -14,14 +14,14 @@ app = Typer()
 
 @app.command("list")
 def list_cmd():
-    typer_echo("Built-in:")
+    typer_echo("Built-in")
     found = False
     for t in list_templates(BUILTIN_TEMPLATES_PATH):
         found = True
         typer_echo(t)
 
     if found:
-        typer_echo("\n")
+        typer_echo("")
     else:
         typer_echo("(none)\n")
 
