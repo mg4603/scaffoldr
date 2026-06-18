@@ -110,4 +110,6 @@ def test_list_templates_returns_name_description(tmp_path):
 
     result = list_templates(templates_dir)
 
-    assert ["foo   bar", "hello   world"] == result
+    assert sorted(["foo   bar", "hello   world"]) == sorted(
+        result
+    )
