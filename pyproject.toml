@@ -23,6 +23,8 @@ scaffoldr = "scaffoldr.main:app"
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
+    "pytest-cov>=5.0.0",
+    "tomli-w>=1.2.0"
 ]
 
 [tool.ruff]

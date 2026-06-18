@@ -76,7 +76,7 @@ def create_repo(
 
         if not response.is_success:
             raise GitHubError(
-                f"Error: GitHub API returned "
+                "Error: GitHub API returned "
                 f"{response.status_code} - "
                 f"{response.text}",
             )
@@ -90,6 +90,6 @@ def get_authenticated_user(client: httpx.Client) -> str:
     if not response.is_success:
         raise GitHubError(
             "Error: could not fetch GitHub user - check"
-            " you token.",
+            " your token.",
         )
     return response.json()["login"]

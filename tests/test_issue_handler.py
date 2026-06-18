@@ -3,13 +3,45 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tomli_w import dump as toml_dump
 
 from scaffoldr.exceptions import GitHubError
 from scaffoldr.issue_handler import (
     DEFAULT_ISSUES,
+    _load_user_issues,
     create_issues,
     resolve_templates,
 )
+
+
+def test_load_user_issues_issues_file_does_not_exist(
+    tmp_path, monkeypatch
+):
+    issues_file = tmp_path / "issues.toml"
+
+    monkeypatch.setattr(
+        "scaffoldr.issue_handler.ISSUES_FILE", issues_file
+    )
+    assert _load_user_issues() == []
+
+
+def test_load_user_issues_file_exists(tmp_path, monkeypatch):
+    issues = [
+        {
+            "title": "sample_issue_title",
+            "body": "sample issue body",
+        },
+    ]
+
+    issue_file = tmp_path / "issues.toml"
+    monkeypatch.setattr(
+        "scaffoldr.issue_handler.ISSUES_FILE", issue_file
+    )
+
+    with issue_file.open("wb") as f:
+        toml_dump({"issue": issues}, f)
+
+    assert _load_user_issues() == issues
 
 
 def test_resolve_templates_returns_defaults():
@@ -99,4 +131,63 @@ def test_create_issues_rate_limited():
             create_issues(
                 "user", "repo", mock_client, progress.append
             )
+    assert len(progress) == 0
+
+
+def test_create_issues_410_error():
+
+    mock_response = MagicMock()
+    mock_response.is_success = False
+    mock_response.status_code = 410
+
+    mock_client = MagicMock()
+    mock_client.post.return_value = mock_response
+
+    progress = []
+    with pytest.raises(
+        GitHubError,
+        match="Error: issues are disabled on this repo",
+    ):
+        create_issues(
+            "user", "this_repo", mock_client, progress.append
+        )
+
+    assert len(progress) == 0
+
+
+def test_creat_issues_non_410_403_errors(tmp_path, monkeypatch):
+    issues = [
+        {
+            "title": "sample_template_title",
+            "body": "sample template body",
+        }
+    ]
+
+    mock_response = MagicMock()
+    mock_response.is_success = False
+    mock_response.status_code = 404
+
+    mock_client = MagicMock()
+    mock_client.post.return_value = mock_response
+
+    progress = []
+
+    with patch(
+        "scaffoldr.issue_handler.resolve_templates",
+        return_value=issues,
+    ):
+        with pytest.raises(
+            GitHubError,
+            match=(
+                "Error: failed to create issue "
+                "'sample_template_title' - 404"
+            ),
+        ):
+            create_issues(
+                "user",
+                "this_repo",
+                mock_client,
+                progress.append,
+            )
+
     assert len(progress) == 0
