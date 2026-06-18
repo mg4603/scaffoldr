@@ -3,6 +3,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from scaffoldr.main import app
+from tests.conftest import strip_ansi
 
 runner = CliRunner()
 
@@ -142,4 +143,4 @@ def test_migrate_non_permission_error_legacy_path_removal(
 
     assert (
         "Error: non-permission error\nAborted."
-    ) in result.output
+    ) in strip_ansi(result.output)
