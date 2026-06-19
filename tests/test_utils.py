@@ -1,9 +1,30 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from typer import Abort as typer_abort
 
-from scaffoldr.utils import check_legacy_config, ensure_dirs
+from scaffoldr.exceptions import GitError
+from scaffoldr.utils import (
+    _git,
+    check_legacy_config,
+    ensure_dirs,
+)
+
+
+def test_git_error_in_git_command_runner(tmp_path):
+    args = ["asdf"]
+    result = MagicMock()
+    result.returncode = 1
+    result.stderr = "some error"
+
+    with patch(
+        "scaffoldr.utils.subprocess_run",
+        return_value=result,
+    ):
+        with pytest.raises(
+            GitError, match="git error: some error"
+        ):
+            _git(args, tmp_path)
 
 
 def test_ensure_dirs_success(tmp_path, monkeypatch):

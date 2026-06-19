@@ -1,12 +1,25 @@
 from pathlib import Path
+from subprocess import run as subprocess_run
 
 from typer import Abort as typer_abort
 from typer import echo as typer_echo
 
+from scaffoldr.exceptions import GitError
 from scaffoldr.user_config import (
     CONFIG_DIR,
     USER_DEFINED_TEMPLATES_PATH,
 )
+
+
+def _git(args: list[str], cwd: Path) -> None:
+    result = subprocess_run(
+        ["git", *args],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise GitError(f"git error: {result.stderr.strip()}")
 
 
 def check_legacy_config():

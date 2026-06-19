@@ -26,22 +26,6 @@ def project(tmp_path):
     return tmp_path / "myproject"
 
 
-def test_git_error_in_git_command_runner(tmp_path):
-    args = ["asdf"]
-    result = MagicMock()
-    result.returncode = 1
-    result.stderr = "some error"
-
-    with patch(
-        "scaffoldr.local.subprocess_run",
-        return_value=result,
-    ):
-        with pytest.raises(
-            GitError, match="git error: some error"
-        ):
-            _git(args, tmp_path)
-
-
 def test_folders_created(project):
     assert (project / "myproject").is_dir()
     assert (project / "tests").is_dir()
