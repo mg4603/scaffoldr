@@ -27,6 +27,18 @@ def test_git_error_in_git_command_runner(tmp_path):
             _git(args, tmp_path)
 
 
+def test_git_cmd_runner_happy_path(tmp_path, monkeypatch):
+    args = ["init"]
+    result = MagicMock()
+    result.returncode = 0
+
+    monkeypatch.setattr(
+        "scaffoldr.utils.subprocess_run",
+        lambda *a, **kw: result,
+    )
+    _git(args, cwd=tmp_path)
+
+
 def test_ensure_dirs_success(tmp_path, monkeypatch):
     user_templates = tmp_path / "templates"
 
