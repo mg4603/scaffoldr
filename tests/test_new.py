@@ -25,13 +25,11 @@ def mock_config(monkeypatch):
 
 
 @pytest_fixture
-def mock_subprocess_run(monkeypatch):
-    mock_subprocess_run = MagicMock()
+def mock_git_cmd_runner(monkeypatch):
+    git_cmd_runner = MagicMock()
 
-    monkeypatch.setattr(
-        "scaffoldr.new.subprocess_run", mock_subprocess_run
-    )
-    return mock_subprocess_run
+    monkeypatch.setattr("scaffoldr.new._git", git_cmd_runner)
+    return git_cmd_runner
 
 
 @pytest_fixture
@@ -75,7 +73,7 @@ def test_new_use_ssh(
     tmp_path,
     monkeypatch,
     mock_config,
-    mock_subprocess_run,
+    mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
@@ -103,7 +101,7 @@ def test_new_do_not_use_ssh(
     tmp_path,
     monkeypatch,
     mock_config,
-    mock_subprocess_run,
+    mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
@@ -127,28 +125,24 @@ def test_new_do_not_use_ssh(
         f"Repo ready: {mock_repo['html_url']}\n"
     ) in result.output
 
-    assert len(mock_subprocess_run.call_args_list) == 3
-    assert mock_subprocess_run.call_args_list[0] == call(
+    assert len(mock_git_cmd_runner.call_args_list) == 3
+    assert mock_git_cmd_runner.call_args_list[0] == call(
         [
-            "git",
             "remote",
             "add",
             "origin",
             "https://user:token@github.com/user/repo.git",
         ],
         cwd=tmp_path / "foo",
-        check=True,
     )
-    assert mock_subprocess_run.call_args_list[2] == call(
+    assert mock_git_cmd_runner.call_args_list[2] == call(
         [
-            "git",
             "remote",
             "set-url",
             "origin",
             "https://github.com/user/repo.git",
         ],
         cwd=tmp_path / "foo",
-        check=True,
     )
 
 
@@ -156,7 +150,7 @@ def test_new_do_not_protect_branch(
     tmp_path,
     monkeypatch,
     mock_config,
-    mock_subprocess_run,
+    mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
@@ -186,7 +180,7 @@ def test_new_raises_exception(
     tmp_path,
     monkeypatch,
     mock_config,
-    mock_subprocess_run,
+    mock_git_cmd_runner,
     mock_github_deps,
 ):
     monkeypatch.setattr(

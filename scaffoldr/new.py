@@ -1,5 +1,4 @@
 from pathlib import Path
-from subprocess import run as subprocess_run
 from typing import Optional
 
 from typer import Argument as typer_argument
@@ -30,6 +29,7 @@ from scaffoldr.protection import (
     protect_branch as _protect_branch,
 )
 from scaffoldr.user_config import Config
+from scaffoldr.utils import _git
 
 app = Typer(
     help=(
@@ -91,28 +91,24 @@ def new(
                 f"https://{cfg.github_username}:{token}@",
             )
 
-        subprocess_run(
-            ["git", "remote", "add", "origin", remote_url],
+        _git(
+            ["remote", "add", "origin", remote_url],
             cwd=root,
-            check=True,
         )
-        subprocess_run(
-            ["git", "push", "-u", "origin", "main"],
+        _git(
+            ["push", "-u", "origin", "main"],
             cwd=root,
-            check=True,
         )
 
         if not cfg.use_ssh:
-            subprocess_run(
+            _git(
                 [
-                    "git",
                     "remote",
                     "set-url",
                     "origin",
                     clone_url,
                 ],
                 cwd=root,
-                check=True,
             )
 
         with get_client() as client:
