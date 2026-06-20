@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from subprocess import run as subprocess_run
 
-from scaffoldr.exceptions import GitError, LocalError
+from scaffoldr.exceptions import LocalError
 from scaffoldr.template_handler import (
     Template,
     load_template,
@@ -12,17 +11,7 @@ from scaffoldr.template_handler import (
     resolve_template_path,
 )
 from scaffoldr.user_config import Config
-
-
-def _git(args: list[str], cwd: Path) -> None:
-    result = subprocess_run(
-        ["git", *args],
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise GitError(f"git error: {result.stderr.strip()}")
+from scaffoldr.utils import _git
 
 
 def scaffold(
