@@ -1,30 +1,30 @@
 from typer.testing import CliRunner
 
 from scaffoldr.main import app
+from tests.conftest import strip_ansi
 
 runner = CliRunner()
 
 
-# addressed in #61
-# def test_init_config_file_overwrite_denied(
-#     tmp_path, monkeypatch
-# ):
-#     config_dir = tmp_path / ".config" / "scaffoldr"
-#     config_dir.mkdir(parents=True, exist_ok=True)
-#
-#     config_file = config_dir / "config.toml"
-#     config_file.write_text('foo="bar"')
-#
-#     monkeypatch.setattr(
-#         "scaffoldr.config.init.CONFIG_FILE", config_file
-#     )
-#
-#     result = runner.invoke(app, ["config", "init"],
-#               input="n\n")
-#
-#     assert (
-#         f"{config_file} already exists. Overwrite?\nAborted."
-#     ) in result.output
+def test_init_config_file_overwrite_denied(
+    tmp_path, monkeypatch
+):
+    config_dir = tmp_path / ".config" / "scaffoldr"
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    config_file = config_dir / "config.toml"
+    config_file.write_text('foo="bar"')
+
+    monkeypatch.setattr(
+        "scaffoldr.config.init.CONFIG_FILE", config_file
+    )
+
+    result = runner.invoke(app, ["config", "init"], input="n\n")
+
+    assert (
+        f"{config_file} already exists. "
+        "Overwrite? [y/N]: n\nAborted."
+    ) in strip_ansi(result.output)
 
 
 def test_init_happy_path(tmp_path, monkeypatch):
