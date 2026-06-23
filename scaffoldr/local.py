@@ -11,7 +11,7 @@ from scaffoldr.template_handler import (
     resolve_template_path,
 )
 from scaffoldr.user_config import Config
-from scaffoldr.utils import _git
+from scaffoldr.utils import _git, build_scaffold_variables
 
 
 def scaffold(
@@ -32,12 +32,9 @@ def scaffold(
 
     progress(f"Creating project at {root} ...")
 
-    scaffold_variables = {
-        "project_name": project_name,
-        "author": cfg.author,
-        "python_version": cfg.python_version,
-        "license_": cfg.license,
-    }
+    scaffold_variables = build_scaffold_variables(
+        project_name, cfg
+    )
 
     template_path = resolve_template_path(template_name)
     template: Template = load_template(template_path)
