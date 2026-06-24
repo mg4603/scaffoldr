@@ -10,21 +10,6 @@ runner = CliRunner()
 
 
 @pytest_fixture
-def mock_config(monkeypatch):
-    config = MagicMock()
-    config.default_private = True
-    config.use_ssh = True
-    config.github_username = "user"
-    config.required_reviewers = 1
-    config.github_token = "token"
-
-    monkeypatch.setattr(
-        "scaffoldr.new.Config.load", lambda: config
-    )
-    return config
-
-
-@pytest_fixture
 def mock_git_cmd_runner(monkeypatch):
     git_cmd_runner = MagicMock()
 
@@ -72,12 +57,12 @@ def mock_github_deps(monkeypatch):
 def test_new_use_ssh(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
-
+    _ = make_mock_config("scaffoldr.new.Config.load")
     result = runner.invoke(
         app,
         [
@@ -100,11 +85,12 @@ def test_new_use_ssh(
 def test_new_do_not_use_ssh(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
+    mock_config = make_mock_config("scaffoldr.new.Config.load")
     mock_config.use_ssh = False
 
     result = runner.invoke(
@@ -149,12 +135,12 @@ def test_new_do_not_use_ssh(
 def test_new_do_not_protect_branch(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
-
+    _ = make_mock_config("scaffoldr.new.Config.load")
     result = runner.invoke(
         app,
         [
@@ -179,10 +165,11 @@ def test_new_do_not_protect_branch(
 def test_new_raises_exception(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
+    _ = make_mock_config("scaffoldr.new.Config.load")
     monkeypatch.setattr(
         "scaffoldr.new._scaffold",
         lambda *a: (_ for _ in ()).throw(
