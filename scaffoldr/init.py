@@ -11,8 +11,12 @@ from scaffoldr.exceptions import (
     LocalError,
     TemplateError,
 )
-from scaffoldr.local import scaffold as _scaffold
-from scaffoldr.utils import dry_run_scaffold
+from scaffoldr.local import (
+    dry_run_scaffold,
+)
+from scaffoldr.local import (
+    scaffold as _scaffold,
+)
 
 app = Typer(help="Scaffold a new project locally.")
 
