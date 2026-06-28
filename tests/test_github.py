@@ -8,6 +8,7 @@ from scaffoldr.exceptions import GitHubError
 from scaffoldr.github import (
     _get_token,
     create_repo,
+    dry_run_github_ops,
     get_authenticated_user,
     get_client,
 )
@@ -166,3 +167,24 @@ def test_get_authenticated_user_raises_on_error():
     ):
         get_authenticated_user(mock_client)
     mock_client.get.assert_called_once_with("/user")
+
+
+def test_dry_run_github_ops():
+    progress = []
+    dry_run_github_ops(
+        project_name="project",
+        protect=True,
+        use_ssh=False,
+        progress=progress.append,
+    )
+
+    assert progress == [
+        "[dry-run] Would create GitHub repo: project",
+        "[dry-run] Would run: git remote add "
+        "origin <remote-url>",
+        "[dry-run] Would run: git push -u origin main",
+        "[dry-run] Would run: git remote set-url origin "
+        "<clone-url>",
+        "[dry-run] Would create default issues for: project",
+        "[dry-run] Would enable branch protection on: main",
+    ]
