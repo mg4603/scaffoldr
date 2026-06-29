@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, call
 
 from pytest import fixture as pytest_fixture
 from typer.testing import CliRunner
+from typer import echo as typer_echo
 
 from scaffoldr.exceptions import TemplateError
 from scaffoldr.main import app
@@ -191,3 +192,40 @@ def test_new_raises_exception(
 
     assert result.exit_code == 1
     assert result.output == "simulated.\n"
+
+
+def test_new_dry_run(tmp_path, monkeypatch, make_mock_config):
+    _ = make_mock_config("scaffoldr.new.Config.load")
+
+    mock_dry_run_scaffold = MagicMock()
+    monkeypatch.setattr(
+        "scaffoldr.new.dry_run_scaffold", mock_dry_run_scaffold
+    )
+
+    mock_dry_run_github_ops = MagicMock()
+    monkeypatch.setattr(
+        "scaffoldr.new.dry_run_github_ops",
+        mock_dry_run_github_ops,
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "foo",
+            "--description",
+            "bar",
+            "--path",
+            f"{tmp_path}",
+            "--dry-run",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert mock_dry_run_scaffold.call_args_list[0] == call(
+        "foo", "default", tmp_path, typer_echo
+    )
+
+    assert mock_dry_run_github_ops.call_args_list[0] == call(
+        "foo", True, True, typer_echo
+    )

@@ -15,6 +15,7 @@ from scaffoldr.exceptions import (
 )
 from scaffoldr.github import (
     _get_token,
+    dry_run_github_ops,
     get_authenticated_user,
     get_client,
 )
@@ -24,7 +25,12 @@ from scaffoldr.github import (
 from scaffoldr.issue_handler import (
     create_issues as _create_issues,
 )
-from scaffoldr.local import scaffold as _scaffold
+from scaffoldr.local import (
+    dry_run_scaffold,
+)
+from scaffoldr.local import (
+    scaffold as _scaffold,
+)
 from scaffoldr.protection import (
     protect_branch as _protect_branch,
 )
@@ -59,6 +65,13 @@ def new(
     protect: bool = typer_option(
         True, help="Enable branch protection on main."
     ),
+    dry_run: bool = typer_option(
+        False,
+        help=(
+            "Print what would happen without filesystem "
+            "changes or calling GitHub."
+        ),
+    ),
 ) -> None:
     """
     Scaffold a new project locally and create a
@@ -69,66 +82,76 @@ def new(
         private if private is not None else cfg.default_private
     )
     try:
-        _scaffold(project_name, template, path, typer_echo)
-
-        typer_echo("Creating GitHub repo...")
-        repo = _create_repo(
-            name=project_name,
-            description=description,
-            private=is_private,
-        )
-
-        root = path / project_name
-        ssh_url = repo["ssh_url"]
-        clone_url = repo["clone_url"]
-
-        if cfg.use_ssh:
-            remote_url = ssh_url
-        else:
-            token = _get_token()
-            remote_url = clone_url.replace(
-                "https://",
-                f"https://{cfg.github_username}:{token}@",
+        if dry_run:
+            dry_run_scaffold(
+                project_name, template, path, typer_echo
             )
 
-        _git(
-            ["remote", "add", "origin", remote_url],
-            cwd=root,
-        )
-        _git(
-            ["push", "-u", "origin", "main"],
-            cwd=root,
-        )
+            dry_run_github_ops(
+                project_name, protect, cfg.use_ssh, typer_echo
+            )
 
-        if not cfg.use_ssh:
+        else:
+            _scaffold(project_name, template, path, typer_echo)
+
+            typer_echo("Creating GitHub repo...")
+            repo = _create_repo(
+                name=project_name,
+                description=description,
+                private=is_private,
+            )
+
+            root = path / project_name
+            ssh_url = repo["ssh_url"]
+            clone_url = repo["clone_url"]
+
+            if cfg.use_ssh:
+                remote_url = ssh_url
+            else:
+                token = _get_token()
+                remote_url = clone_url.replace(
+                    "https://",
+                    f"https://{cfg.github_username}:{token}@",
+                )
+
             _git(
-                [
-                    "remote",
-                    "set-url",
-                    "origin",
-                    clone_url,
-                ],
+                ["remote", "add", "origin", remote_url],
+                cwd=root,
+            )
+            _git(
+                ["push", "-u", "origin", "main"],
                 cwd=root,
             )
 
-        with get_client() as client:
-            owner = get_authenticated_user(client)
-
-            typer_echo("Creating issues...")
-            _create_issues(
-                owner, project_name, client, typer_echo
-            )
-
-            if protect:
-                typer_echo("Setting branch protection...")
-                _protect_branch(
-                    owner,
-                    project_name,
-                    client,
-                    required_reviewers=cfg.required_reviewers,
-                    progress=typer_echo,
+            if not cfg.use_ssh:
+                _git(
+                    [
+                        "remote",
+                        "set-url",
+                        "origin",
+                        clone_url,
+                    ],
+                    cwd=root,
                 )
-        typer_echo(f"Repo ready: {repo['html_url']}")
+
+            with get_client() as client:
+                owner = get_authenticated_user(client)
+
+                typer_echo("Creating issues...")
+                _create_issues(
+                    owner, project_name, client, typer_echo
+                )
+
+                if protect:
+                    typer_echo("Setting branch protection...")
+                    _protect_branch(
+                        owner,
+                        project_name,
+                        client,
+                        required_reviewers=cfg.required_reviewers,
+                        progress=typer_echo,
+                    )
+            typer_echo(f"Repo ready: {repo['html_url']}")
     except (
         TemplateError,
         GitHubError,
