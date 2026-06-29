@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, call
 
 from pytest import fixture as pytest_fixture
-from typer.testing import CliRunner
 from typer import echo as typer_echo
+from typer.testing import CliRunner
 
 from scaffoldr.exceptions import TemplateError
 from scaffoldr.main import app
