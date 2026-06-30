@@ -1,27 +1,13 @@
 from unittest.mock import MagicMock, call
 
 from pytest import fixture as pytest_fixture
+from typer import echo as typer_echo
 from typer.testing import CliRunner
 
 from scaffoldr.exceptions import TemplateError
 from scaffoldr.main import app
 
 runner = CliRunner()
-
-
-@pytest_fixture
-def mock_config(monkeypatch):
-    config = MagicMock()
-    config.default_private = True
-    config.use_ssh = True
-    config.github_username = "user"
-    config.required_reviewers = 1
-    config.github_token = "token"
-
-    monkeypatch.setattr(
-        "scaffoldr.new.Config.load", lambda: config
-    )
-    return config
 
 
 @pytest_fixture
@@ -72,12 +58,12 @@ def mock_github_deps(monkeypatch):
 def test_new_use_ssh(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
-
+    _ = make_mock_config("scaffoldr.new.Config.load")
     result = runner.invoke(
         app,
         [
@@ -100,11 +86,12 @@ def test_new_use_ssh(
 def test_new_do_not_use_ssh(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
+    mock_config = make_mock_config("scaffoldr.new.Config.load")
     mock_config.use_ssh = False
 
     result = runner.invoke(
@@ -149,12 +136,12 @@ def test_new_do_not_use_ssh(
 def test_new_do_not_protect_branch(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
     mock_repo = mock_github_deps
-
+    _ = make_mock_config("scaffoldr.new.Config.load")
     result = runner.invoke(
         app,
         [
@@ -179,10 +166,11 @@ def test_new_do_not_protect_branch(
 def test_new_raises_exception(
     tmp_path,
     monkeypatch,
-    mock_config,
+    make_mock_config,
     mock_git_cmd_runner,
     mock_github_deps,
 ):
+    _ = make_mock_config("scaffoldr.new.Config.load")
     monkeypatch.setattr(
         "scaffoldr.new._scaffold",
         lambda *a: (_ for _ in ()).throw(
@@ -204,3 +192,40 @@ def test_new_raises_exception(
 
     assert result.exit_code == 1
     assert result.output == "simulated.\n"
+
+
+def test_new_dry_run(tmp_path, monkeypatch, make_mock_config):
+    _ = make_mock_config("scaffoldr.new.Config.load")
+
+    mock_dry_run_scaffold = MagicMock()
+    monkeypatch.setattr(
+        "scaffoldr.new.dry_run_scaffold", mock_dry_run_scaffold
+    )
+
+    mock_dry_run_github_ops = MagicMock()
+    monkeypatch.setattr(
+        "scaffoldr.new.dry_run_github_ops",
+        mock_dry_run_github_ops,
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "foo",
+            "--description",
+            "bar",
+            "--path",
+            f"{tmp_path}",
+            "--dry-run",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert mock_dry_run_scaffold.call_args_list[0] == call(
+        "foo", "default", tmp_path, typer_echo
+    )
+
+    assert mock_dry_run_github_ops.call_args_list[0] == call(
+        "foo", True, True, typer_echo
+    )

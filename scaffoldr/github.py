@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 
 import httpx
 
@@ -93,3 +94,37 @@ def get_authenticated_user(client: httpx.Client) -> str:
             " your token.",
         )
     return response.json()["login"]
+
+
+def dry_run_github_ops(
+    project_name: str,
+    protect: bool,
+    use_ssh: bool,
+    progress: Callable[[str], None] = lambda _: None,
+) -> None:
+    progress(
+        f"[dry-run] Would create GitHub repo: {project_name}"
+    )
+
+    progress(
+        "[dry-run] Would run: git remote add "
+        "origin <remote-url>"
+    )
+
+    progress("[dry-run] Would run: git push -u origin main")
+
+    if not use_ssh:
+        progress(
+            "[dry-run] Would run: git remote set-url "
+            "origin <clone-url>"
+        )
+
+    progress(
+        "[dry-run] Would create default issues for: "
+        f"{project_name}"
+    )
+
+    if protect:
+        progress(
+            "[dry-run] Would enable branch protection on: main"
+        )

@@ -8,6 +8,7 @@ from scaffoldr.exceptions import GitError
 from scaffoldr.user_config import (
     CONFIG_DIR,
     USER_DEFINED_TEMPLATES_PATH,
+    Config,
 )
 
 
@@ -39,3 +40,14 @@ def ensure_dirs():
     USER_DEFINED_TEMPLATES_PATH.mkdir(
         parents=True, exist_ok=True
     )
+
+
+def build_scaffold_variables(
+    project_name: str, cfg: Config
+) -> dict[str, str]:
+    return {
+        "project_name": project_name,
+        "author": cfg.author,
+        "python_version": cfg.python_version,
+        "license_": cfg.license,
+    }

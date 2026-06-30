@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from scaffoldr.exceptions import LocalError
-from scaffoldr.local import scaffold
+from scaffoldr.local import dry_run_scaffold, scaffold
 from scaffoldr.user_config import Config
 
 DUMMY_CONFIG = Config(
@@ -57,7 +57,6 @@ def test_git_repo_initialized(project):
 
 
 def test_already_exists_raises(tmp_path):
-
     with patch(
         "scaffoldr.local.Config.load", return_value=DUMMY_CONFIG
     ):
@@ -84,3 +83,64 @@ def test_ci_workflow_contains_explicit_installs(project):
         project / ".github" / "workflows" / "ci.yml"
     ).read_text()
     assert "pip install ruff pytest" in content
+
+
+def test_dry_run_scaffold_already_exists(
+    tmp_path, monkeypatch, make_mock_config
+):
+    _ = make_mock_config("scaffoldr.utils.Config.load")
+
+    path = tmp_path / "project"
+    path.mkdir(parents=True, exist_ok=True)
+
+    progress = []
+
+    with pytest.raises(
+        LocalError, match=f"Error: {path} already exists."
+    ):
+        dry_run_scaffold(
+            "project", "template", tmp_path, progress.append
+        )
+
+    assert len(progress) == 0
+
+
+def test_dry_run_scaffold_happy_path(
+    tmp_path, monkeypatch, make_mock_config
+):
+    _ = make_mock_config("scaffoldr.utils.Config.load")
+
+    template_path = tmp_path / "template.toml"
+    template_path.write_text("""
+description = "default scaffolding for python project"
+
+[[files]]
+path = "README.md"
+content = ""
+
+[[files]]
+path = "CONTRIBUTING.md"
+content = ""
+""")
+
+    monkeypatch.setattr(
+        "scaffoldr.local.resolve_template_path",
+        lambda *a: template_path,
+    )
+
+    progress = []
+
+    dry_run_scaffold(
+        "project", "template", tmp_path, progress.append
+    )
+
+    assert [
+        "[dry-run] Would create: "
+        f"{(tmp_path / 'project' / 'README.md')}",
+        "[dry-run] Would create: "
+        f"{(tmp_path / 'project' / 'CONTRIBUTING.md')}",
+        f"[dry-run] @{(tmp_path / 'project')}: git init",
+        f"[dry-run] @{(tmp_path / 'project')}: git add .",
+        f"[dry-run] @{(tmp_path / 'project')}: "
+        'git commit -m "chore: initial scaffold"',
+    ] == progress

@@ -11,7 +11,12 @@ from scaffoldr.exceptions import (
     LocalError,
     TemplateError,
 )
-from scaffoldr.local import scaffold as _scaffold
+from scaffoldr.local import (
+    dry_run_scaffold,
+)
+from scaffoldr.local import (
+    scaffold as _scaffold,
+)
 
 app = Typer(help="Scaffold a new project locally.")
 
@@ -27,10 +32,22 @@ def init(
     path: Path = typer_option(
         Path("."), help="Where to create the project"
     ),
+    dry_run: bool = typer_option(
+        False,
+        help=(
+            "Print what would happen without filesystem "
+            "changes."
+        ),
+    ),
 ) -> None:
     """Scaffold a new project locally."""
     try:
-        _scaffold(project_name, template, path, typer_echo)
+        if dry_run:
+            dry_run_scaffold(
+                project_name, template, path, typer_echo
+            )
+        else:
+            _scaffold(project_name, template, path, typer_echo)
     except (TemplateError, LocalError, GitError) as e:
         typer_echo(e, err=True)
         raise typer_exit(code=1)

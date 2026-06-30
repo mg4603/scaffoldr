@@ -11,7 +11,7 @@ from scaffoldr.template_handler import (
     resolve_template_path,
 )
 from scaffoldr.user_config import Config
-from scaffoldr.utils import _git
+from scaffoldr.utils import _git, build_scaffold_variables
 
 
 def scaffold(
@@ -32,12 +32,9 @@ def scaffold(
 
     progress(f"Creating project at {root} ...")
 
-    scaffold_variables = {
-        "project_name": project_name,
-        "author": cfg.author,
-        "python_version": cfg.python_version,
-        "license_": cfg.license,
-    }
+    scaffold_variables = build_scaffold_variables(
+        project_name, cfg
+    )
 
     template_path = resolve_template_path(template_name)
     template: Template = load_template(template_path)
@@ -56,3 +53,38 @@ def scaffold(
     _git(["commit", "-m", "chore: initial scaffold"], cwd=root)
 
     progress(f"Done. Project ready at {root}")
+
+
+def dry_run_scaffold(
+    project_name: str,
+    template_name: str,
+    path: Path,
+    progress: Callable[[str], None] = lambda _: None,
+) -> None:
+    cfg = Config.load()
+
+    root = path / project_name
+
+    if root.exists():
+        raise LocalError(f"Error: {root} already exists.")
+
+    scaffold_variables = build_scaffold_variables(
+        project_name, cfg
+    )
+
+    template_path = resolve_template_path(template_name)
+    template: Template = load_template(template_path)
+    rendered_template = render_template(
+        template, scaffold_variables
+    )
+
+    for path_str, _ in rendered_template.items():
+        progress(f"[dry-run] Would create: {(root / path_str)}")
+
+    # git
+    progress(f"[dry-run] @{root}: git init")
+    progress(f"[dry-run] @{root}: git add .")
+    progress(
+        f'[dry-run] @{root}: git commit -m "chore: '
+        'initial scaffold"'
+    )
