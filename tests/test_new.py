@@ -11,6 +11,20 @@ runner = CliRunner()
 
 
 @pytest_fixture
+def mock_github_ops(monkeypatch):
+    mock = MagicMock()
+    monkeypatch.setattr("scaffoldr.new.github_ops", mock)
+    return mock
+
+
+@pytest_fixture
+def mock_scaffold(monkeypatch):
+    mock = MagicMock()
+    monkeypatch.setattr("scaffoldr.new._scaffold", mock)
+    return mock
+
+
+@pytest_fixture
 def mock_git_cmd_runner(monkeypatch):
     git_cmd_runner = MagicMock()
 
@@ -59,8 +73,8 @@ def test_new_raises_exception(
     tmp_path,
     monkeypatch,
     make_mock_config,
-    mock_git_cmd_runner,
-    mock_github_deps,
+    mock_scaffold,
+    mock_github_ops,
 ):
     _ = make_mock_config("scaffoldr.new.Config.load")
     monkeypatch.setattr(
