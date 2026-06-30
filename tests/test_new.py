@@ -24,51 +24,6 @@ def mock_scaffold(monkeypatch):
     return mock
 
 
-@pytest_fixture
-def mock_git_cmd_runner(monkeypatch):
-    git_cmd_runner = MagicMock()
-
-    monkeypatch.setattr("scaffoldr.new._git", git_cmd_runner)
-    return git_cmd_runner
-
-
-@pytest_fixture
-def mock_github_deps(monkeypatch):
-    mock_repo = {
-        "ssh_url": "ssh-url",
-        "clone_url": "https://github.com/user/repo.git",
-        "html_url": "html-url",
-    }
-
-    mock_client = MagicMock()
-    mock_client.__enter__ = MagicMock(return_value=mock_client)
-    mock_client.__exit__ = MagicMock(return_value=False)
-    monkeypatch.setattr(
-        "scaffoldr.new.get_client", lambda: mock_client
-    )
-
-    monkeypatch.setattr(
-        "scaffoldr.new._create_repo", lambda *a, **kw: mock_repo
-    )
-    monkeypatch.setattr(
-        "scaffoldr.new._scaffold", lambda *a: None
-    )
-    monkeypatch.setattr(
-        "scaffoldr.new._create_issues", lambda *a: None
-    )
-
-    monkeypatch.setattr(
-        "scaffoldr.new.get_authenticated_user",
-        lambda *a: "user",
-    )
-
-    monkeypatch.setattr(
-        "scaffoldr.new._protect_branch", lambda *a, **kw: None
-    )
-
-    return mock_repo
-
-
 def test_new_raises_exception(
     tmp_path,
     monkeypatch,

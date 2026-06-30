@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch, sentinel
+from unittest.mock import MagicMock, call, patch, sentinel
 
-import pytest
+from pytest import fixture as pytest_fixture
+from pytest import raises as pytest_raises
 
 from scaffoldr.exceptions import GitHubError
 from scaffoldr.github import (
@@ -11,8 +12,66 @@ from scaffoldr.github import (
     dry_run_github_ops,
     get_authenticated_user,
     get_client,
+    github_ops,
 )
 from scaffoldr.user_config import Config
+
+
+@pytest_fixture
+def mock_git_cmd_runner(monkeypatch):
+    git_cmd_runner = MagicMock()
+
+    monkeypatch.setattr("scaffoldr.github._git", git_cmd_runner)
+    return git_cmd_runner
+
+
+@pytest_fixture
+def mock_github_deps(monkeypatch):
+    mock_repo = {
+        "ssh_url": "ssh-url",
+        "clone_url": "https://github.com/user/repo.git",
+        "html_url": "html-url",
+    }
+
+    mock_client = MagicMock()
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+
+    mock_get_client = MagicMock(return_value=mock_client)
+    monkeypatch.setattr(
+        "scaffoldr.github.get_client", mock_get_client
+    )
+
+    mock_create_repo = MagicMock(return_value=mock_repo)
+    monkeypatch.setattr(
+        "scaffoldr.github.create_repo", mock_create_repo
+    )
+
+    mock_create_issues = MagicMock()
+    monkeypatch.setattr(
+        "scaffoldr.github.create_issues", mock_create_issues
+    )
+
+    mock_get_authenticated_user = MagicMock(return_value="user")
+    monkeypatch.setattr(
+        "scaffoldr.github.get_authenticated_user",
+        mock_get_authenticated_user,
+    )
+
+    mock_protect_branch = MagicMock()
+    monkeypatch.setattr(
+        "scaffoldr.github.protect_branch", mock_protect_branch
+    )
+
+    mocks = {
+        "create_repo": mock_create_repo,
+        "protect_branch": mock_protect_branch,
+        "get_authenticated_user": mock_get_authenticated_user,
+        "create_issues": mock_create_issues,
+        "get_client": mock_get_client,
+        "repo": mock_repo,
+    }
+    return mocks
 
 
 def test_get_token_from_env(monkeypatch):
@@ -76,7 +135,7 @@ def test_create_repo_already_exists():
         ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
-        with pytest.raises(GitHubError):
+        with pytest_raises(GitHubError):
             create_repo("myrepo")
 
 
@@ -92,7 +151,7 @@ def test_create_repo_invalid_token():
         ),
         patch("httpx.Client.post", return_value=mock_response),
     ):
-        with pytest.raises(GitHubError):
+        with pytest_raises(GitHubError):
             create_repo("myrepo")
 
 
@@ -111,7 +170,7 @@ def test_create_repo_non_422_401_error():
         "scaffoldr.github._client",
         return_value=mock_client,
     ):
-        with pytest.raises(
+        with pytest_raises(
             GitHubError,
             match=(
                 "Error: GitHub API returned "
@@ -133,7 +192,7 @@ def test_no_token_raises():
     ):
         from scaffoldr.github import _get_token
 
-        with pytest.raises(GitHubError):
+        with pytest_raises(GitHubError):
             _get_token()
 
 
@@ -158,7 +217,7 @@ def test_get_authenticated_user_raises_on_error():
 
     mock_client.get.return_value = mock_response
 
-    with pytest.raises(
+    with pytest_raises(
         GitHubError,
         match=(
             "Error: could not fetch GitHub user - check "
