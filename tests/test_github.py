@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call, patch, sentinel
 
 from pytest import fixture as pytest_fixture
 from pytest import raises as pytest_raises
+from typer import echo as typer_echo
 
 from scaffoldr.exceptions import GitHubError
 from scaffoldr.github import (
@@ -70,6 +71,7 @@ def mock_github_deps(monkeypatch):
         "create_issues": mock_create_issues,
         "get_client": mock_get_client,
         "repo": mock_repo,
+        "client": mock_client,
     }
     return mocks
 
@@ -247,3 +249,151 @@ def test_dry_run_github_ops():
         "[dry-run] Would create default issues for: project",
         "[dry-run] Would enable branch protection on: main",
     ]
+
+
+def assert_common_github_ops(
+    mocks, mock_config, tmp_path, protect=True
+):
+    progress = []
+
+    github_ops(
+        "foo",
+        "bar",
+        True,
+        protect,
+        mock_config,
+        tmp_path,
+        progress.append,
+    )
+
+    if protect:
+        assert [
+            "Creating GitHub repo...",
+            "Creating issues...",
+            "Setting branch protection...",
+            f"Repo ready: {mocks['repo']['html_url']}",
+        ] == progress
+        mocks["protect_branch"].assert_called_once_with(
+            "user",
+            "foo",
+            mocks["client"],
+            required_reviewers=mock_config.required_reviewers,
+            progress=progress.append,
+        )
+
+    else:
+        assert [
+            "Creating GitHub repo...",
+            "Creating issues...",
+            f"Repo ready: {mocks['repo']['html_url']}",
+        ] == progress
+
+    mocks["create_repo"].assert_called_once_with(
+        name="foo", description="bar", private=True
+    )
+    mocks["get_client"].assert_called_once_with()
+    mocks["get_authenticated_user"].assert_called_once_with(
+        mocks["client"]
+    )
+    mocks["create_issues"].assert_called_once_with(
+        "user", "foo", mocks["client"], progress.append
+    )
+
+
+def test_github_ops_use_ssh(
+    tmp_path,
+    monkeypatch,
+    make_mock_config,
+    mock_git_cmd_runner,
+    mock_github_deps,
+):
+    mocks = mock_github_deps
+
+    mock_config = make_mock_config(
+        "scaffoldr.github.Config.load"
+    )
+    mock_config.use_ssh = True
+
+    assert_common_github_ops(
+        mocks, mock_config, tmp_path, protect=True
+    )
+
+    assert mock_git_cmd_runner.call_args_list[0] == call(
+        ["remote", "add", "origin", "ssh-url"],
+        cwd=(tmp_path / "foo"),
+    )
+    assert mock_git_cmd_runner.call_args_list[1] == call(
+        ["push", "-u", "origin", "main"], cwd=(tmp_path / "foo")
+    )
+
+
+########################################################
+
+
+def test_github_ops_do_not_use_ssh(
+    tmp_path,
+    monkeypatch,
+    make_mock_config,
+    mock_git_cmd_runner,
+    mock_github_deps,
+):
+    mocks = mock_github_deps
+
+    mock_config = make_mock_config(
+        "scaffoldr.github.Config.load"
+    )
+    mock_config.use_ssh = False
+
+    assert_common_github_ops(
+        mocks, mock_config, tmp_path, protect=True
+    )
+
+    assert mock_git_cmd_runner.call_args_list[0] == call(
+        [
+            "remote",
+            "add",
+            "origin",
+            "https://user:token@github.com/user/repo.git",
+        ],
+        cwd=tmp_path / "foo",
+    )
+
+    assert mock_git_cmd_runner.call_args_list[1] == call(
+        ["push", "-u", "origin", "main"], cwd=(tmp_path / "foo")
+    )
+
+    assert mock_git_cmd_runner.call_args_list[2] == call(
+        [
+            "remote",
+            "set-url",
+            "origin",
+            "https://github.com/user/repo.git",
+        ],
+        cwd=tmp_path / "foo",
+    )
+
+
+def test_github_ops_do_not_protect_branch(
+    tmp_path,
+    monkeypatch,
+    make_mock_config,
+    mock_git_cmd_runner,
+    mock_github_deps,
+):
+    mocks = mock_github_deps
+    mock_config = make_mock_config(
+        "scaffoldr.github.Config.load"
+    )
+
+    assert_common_github_ops(
+        mocks, mock_config, tmp_path, protect=False
+    )
+
+    assert mock_git_cmd_runner.call_args_list[0] == call(
+        ["remote", "add", "origin", "ssh-url"],
+        cwd=(tmp_path / "foo"),
+    )
+
+    assert mock_git_cmd_runner.call_args_list[1] == call(
+        ["push", "-u", "origin", "main"], cwd=(tmp_path / "foo")
+    )
