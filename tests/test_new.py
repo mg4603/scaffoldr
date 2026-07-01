@@ -24,6 +24,39 @@ def mock_scaffold(monkeypatch):
     return mock
 
 
+def test_new_calls_scaffold_and_github_ops(
+    mock_scaffold, mock_github_ops, tmp_path, make_mock_config
+):
+
+    mock_config = make_mock_config("scaffoldr.new.Config.load")
+
+    _ = runner.invoke(
+        app,
+        [
+            "new",
+            "foo",
+            "--description",
+            "bar",
+            "--path",
+            f"{tmp_path}",
+        ],
+    )
+
+    assert mock_scaffold.call_args_list[0] == call(
+        "foo", "default", tmp_path, typer_echo
+    )
+
+    assert mock_github_ops.call_args_list[0] == call(
+        "foo",
+        "bar",
+        True,
+        True,
+        mock_config,
+        tmp_path,
+        typer_echo,
+    )
+
+
 def test_new_raises_exception(
     tmp_path,
     monkeypatch,
