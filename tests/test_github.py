@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, call, patch, sentinel
 
 from pytest import fixture as pytest_fixture
 from pytest import raises as pytest_raises
-from typer import echo as typer_echo
 
 from scaffoldr.exceptions import GitHubError
 from scaffoldr.github import (
