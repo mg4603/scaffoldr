@@ -14,16 +14,8 @@ from scaffoldr.exceptions import (
     TemplateError,
 )
 from scaffoldr.github import (
-    _get_token,
     dry_run_github_ops,
-    get_authenticated_user,
-    get_client,
-)
-from scaffoldr.github import (
-    create_repo as _create_repo,
-)
-from scaffoldr.issue_handler import (
-    create_issues as _create_issues,
+    github_ops,
 )
 from scaffoldr.local import (
     dry_run_scaffold,
@@ -31,11 +23,7 @@ from scaffoldr.local import (
 from scaffoldr.local import (
     scaffold as _scaffold,
 )
-from scaffoldr.protection import (
-    protect_branch as _protect_branch,
-)
 from scaffoldr.user_config import Config
-from scaffoldr.utils import _git
 
 app = Typer(
     help=(
@@ -94,64 +82,15 @@ def new(
         else:
             _scaffold(project_name, template, path, typer_echo)
 
-            typer_echo("Creating GitHub repo...")
-            repo = _create_repo(
-                name=project_name,
-                description=description,
-                private=is_private,
+            github_ops(
+                project_name,
+                description,
+                is_private,
+                protect,
+                cfg,
+                path,
+                typer_echo,
             )
-
-            root = path / project_name
-            ssh_url = repo["ssh_url"]
-            clone_url = repo["clone_url"]
-
-            if cfg.use_ssh:
-                remote_url = ssh_url
-            else:
-                token = _get_token()
-                remote_url = clone_url.replace(
-                    "https://",
-                    f"https://{cfg.github_username}:{token}@",
-                )
-
-            _git(
-                ["remote", "add", "origin", remote_url],
-                cwd=root,
-            )
-            _git(
-                ["push", "-u", "origin", "main"],
-                cwd=root,
-            )
-
-            if not cfg.use_ssh:
-                _git(
-                    [
-                        "remote",
-                        "set-url",
-                        "origin",
-                        clone_url,
-                    ],
-                    cwd=root,
-                )
-
-            with get_client() as client:
-                owner = get_authenticated_user(client)
-
-                typer_echo("Creating issues...")
-                _create_issues(
-                    owner, project_name, client, typer_echo
-                )
-
-                if protect:
-                    typer_echo("Setting branch protection...")
-                    _protect_branch(
-                        owner,
-                        project_name,
-                        client,
-                        required_reviewers=cfg.required_reviewers,
-                        progress=typer_echo,
-                    )
-            typer_echo(f"Repo ready: {repo['html_url']}")
     except (
         TemplateError,
         GitHubError,
