@@ -1,6 +1,4 @@
-from pathlib import Path
 from tomllib import TOMLDecodeError
-from unittest.mock import patch
 
 import pytest
 
@@ -11,7 +9,19 @@ from scaffoldr.template_handler import (
     load_template,
     render_template,
     resolve_template_path,
+    validate_template,
 )
+
+
+@pytest.fixture
+def make_raise(monkeypatch):
+    def _make(target, exception):
+        monkeypatch.setattr(
+            target,
+            lambda *a, **kw: (_ for _ in ()).throw(exception),
+        )
+
+    return _make
 
 
 def test_find_user_template_first_during_resolution(
@@ -104,45 +114,48 @@ def test_template_not_found_during_load(tmp_path):
         load_template(template_file)
 
 
-def test_permission_error_during_load(tmp_path):
+def test_permission_error_during_load(tmp_path, make_raise):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
 
     template_file = template_dir / "foo"
     template_file.write_text('description="sample template"')
 
-    with patch.object(
-        Path, "open", side_effect=PermissionError("read denied")
+    _ = make_raise(
+        "scaffoldr.template_handler.Path.open",
+        PermissionError("read denied"),
+    )
+
+    with pytest.raises(
+        TemplateError,
+        match="Permission denied reading template: foo",
     ):
-        with pytest.raises(
-            TemplateError,
-            match="Permission denied reading template: foo",
-        ):
-            load_template(template_file)
+        load_template(template_file)
 
 
-def test_toml_decode_error_during_load(tmp_path):
+def test_toml_decode_error_during_load(tmp_path, make_raise):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
 
     template_file = template_dir / "foo"
     template_file.write_text('description = "sample template"')
 
-    with patch(
+    _ = make_raise(
         "scaffoldr.template_handler.toml_load",
-        side_effect=TOMLDecodeError("simulated decode error"),
+        TOMLDecodeError("simulated decode error"),
+    )
+
+    with pytest.raises(
+        TemplateError,
+        match=(
+            "Invalid TOML in template file foo: "
+            "simulated decode error"
+        ),
     ):
-        with pytest.raises(
-            TemplateError,
-            match=(
-                "Invalid TOML in template file foo: "
-                "simulated decode error"
-            ),
-        ):
-            load_template(template_file)
+        load_template(template_file)
 
 
-def test_os_error_during_load(tmp_path):
+def test_os_error_during_load(tmp_path, make_raise):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
 
@@ -151,18 +164,18 @@ def test_os_error_during_load(tmp_path):
         'description = "sample template file"'
     )
 
-    with patch(
+    _ = make_raise(
         "scaffoldr.template_handler.toml_load",
-        side_effect=OSError("simulated OSError"),
+        OSError("simulated OSError"),
+    )
+    with pytest.raises(
+        TemplateError,
+        match=(
+            "Failed to read template file foo: "
+            "simulated OSError"
+        ),
     ):
-        with pytest.raises(
-            TemplateError,
-            match=(
-                "Failed to read template file foo: "
-                "simulated OSError"
-            ),
-        ):
-            load_template(template_file)
+        load_template(template_file)
 
 
 def test_missing_key_during_load(tmp_path):
@@ -236,7 +249,7 @@ def test_file_not_found_during_get_description(
 
 
 def test_permission_error_during_get_description(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, make_raise
 ):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
@@ -244,20 +257,19 @@ def test_permission_error_during_get_description(
     template_file = template_dir / "foo.toml"
     template_file.write_text('description="sample template"')
 
-    with patch.object(
-        Path,
-        "open",
-        side_effect=PermissionError("simulated read denial"),
+    _ = make_raise(
+        "scaffoldr.template_handler.Path.open",
+        PermissionError("simulated read denial"),
+    )
+    with pytest.raises(
+        TemplateError,
+        match="Permission denied reading template: foo",
     ):
-        with pytest.raises(
-            TemplateError,
-            match="Permission denied reading template: foo",
-        ):
-            get_description(template_file)
+        get_description(template_file)
 
 
 def test_toml_decode_error_during_get_description(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, make_raise
 ):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
@@ -265,41 +277,41 @@ def test_toml_decode_error_during_get_description(
     template_file = template_dir / "foo.toml"
     template_file.write_text("sample template")
 
-    with patch(
+    _ = make_raise(
         "scaffoldr.template_handler.toml_load",
-        side_effect=TOMLDecodeError(
+        TOMLDecodeError("simulated toml decode error"),
+    )
+    with pytest.raises(
+        TemplateError,
+        match=(
+            "Invalid TOML in template file foo: "
             "simulated toml decode error"
         ),
     ):
-        with pytest.raises(
-            TemplateError,
-            match=(
-                "Invalid TOML in template file foo: "
-                "simulated toml decode error"
-            ),
-        ):
-            get_description(template_file)
+        get_description(template_file)
 
 
-def test_os_error_during_get_description(tmp_path, monkeypatch):
+def test_os_error_during_get_description(
+    tmp_path, monkeypatch, make_raise
+):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
 
     template_file = template_dir / "foo.toml"
     template_file.write_text("sample template")
 
-    with patch(
+    _ = make_raise(
         "scaffoldr.template_handler.toml_load",
-        side_effect=OSError("simulated os error"),
+        OSError("simulated os error"),
+    )
+    with pytest.raises(
+        TemplateError,
+        match=(
+            "Failed to read template file foo: "
+            "simulated os error"
+        ),
     ):
-        with pytest.raises(
-            TemplateError,
-            match=(
-                "Failed to read template file foo: "
-                "simulated os error"
-            ),
-        ):
-            get_description(template_file)
+        get_description(template_file)
 
 
 def test_description_missing_in_get_description(
