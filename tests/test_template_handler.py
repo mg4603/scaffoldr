@@ -1,3 +1,4 @@
+from pathlib import Path
 from tomllib import TOMLDecodeError
 
 import pytest
@@ -24,17 +25,24 @@ def make_raise(monkeypatch):
     return _make
 
 
+def make_template_file(path: Path, file: str, content: str):
+    path.mkdir(parents=True, exist_ok=True)
+    file_path = path / file
+    file_path.write_text(content)
+
+    return file_path
+
+
 def test_find_user_template_first_during_resolution(
     tmp_path, monkeypatch
 ):
     user_templates = tmp_path / "user"
     builtin_templates = tmp_path / "builtin"
+    builtin_templates.mkdir(parents=True, exist_ok=True)
 
-    user_templates.mkdir()
-    builtin_templates.mkdir()
-
-    user_file = user_templates / "foo.toml"
-    user_file.write_text("user")
+    user_file = make_template_file(
+        user_templates, "foo.toml", "user"
+    )
 
     monkeypatch.setattr(
         "scaffoldr.template_handler.USER_DEFINED_TEMPLATES_PATH",
@@ -46,7 +54,6 @@ def test_find_user_template_first_during_resolution(
     )
 
     result = resolve_template_path("foo")
-
     assert result == user_file
 
 
@@ -56,14 +63,10 @@ def test_falls_back_to_builtin_during_resolution(
     user_templates = tmp_path / "user"
     builtin_templates = tmp_path / "builtin"
 
-    user_templates.mkdir()
-    builtin_templates.mkdir()
-
-    user_file = user_templates / "foo.toml"
-    user_file.write_text("user")
-
-    builtin_file = builtin_templates / "foo1.toml"
-    builtin_file.write_text("builtin")
+    _ = make_template_file(user_templates, "foo.toml", "user")
+    builtin_file = make_template_file(
+        builtin_templates, "foo1.toml", "builtin"
+    )
 
     monkeypatch.setattr(
         "scaffoldr.template_handler.USER_DEFINED_TEMPLATES_PATH",
@@ -74,7 +77,6 @@ def test_falls_back_to_builtin_during_resolution(
         builtin_templates,
     )
     result = resolve_template_path("foo1")
-
     assert result == builtin_file
 
 
@@ -106,20 +108,19 @@ def test_template_not_found_during_load(tmp_path):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
 
-    template_file = template_dir / "foo"
+    template = template_dir / "foo"
 
     with pytest.raises(
         TemplateError, match="Template file not found: foo"
     ):
-        load_template(template_file)
+        load_template(template)
 
 
 def test_permission_error_during_load(tmp_path, make_raise):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
-
-    template_file = template_dir / "foo"
-    template_file.write_text('description="sample template"')
+    template = make_template_file(
+        template_dir, "foo", 'description="sample template"'
+    )
 
     _ = make_raise(
         "scaffoldr.template_handler.Path.open",
@@ -130,15 +131,15 @@ def test_permission_error_during_load(tmp_path, make_raise):
         TemplateError,
         match="Permission denied reading template: foo",
     ):
-        load_template(template_file)
+        load_template(template)
 
 
 def test_toml_decode_error_during_load(tmp_path, make_raise):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
 
-    template_file = template_dir / "foo"
-    template_file.write_text('description = "sample template"')
+    template = make_template_file(
+        template_dir, "foo", 'description = "sample template"'
+    )
 
     _ = make_raise(
         "scaffoldr.template_handler.toml_load",
@@ -152,16 +153,16 @@ def test_toml_decode_error_during_load(tmp_path, make_raise):
             "simulated decode error"
         ),
     ):
-        load_template(template_file)
+        load_template(template)
 
 
 def test_os_error_during_load(tmp_path, make_raise):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
 
-    template_file = template_dir / "foo"
-    template_file.write_text(
-        'description = "sample template file"'
+    template = make_template_file(
+        template_dir,
+        "foo",
+        'description = "sample template file"',
     )
 
     _ = make_raise(
@@ -175,16 +176,16 @@ def test_os_error_during_load(tmp_path, make_raise):
             "simulated OSError"
         ),
     ):
-        load_template(template_file)
+        load_template(template)
 
 
 def test_missing_key_during_load(tmp_path):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
 
-    template_file = template_dir / "foo"
-    template_file.write_text(
-        'description = "sample template file"'
+    template = make_template_file(
+        template_dir,
+        "foo",
+        'description = "sample template file"',
     )
 
     with pytest.raises(
@@ -193,7 +194,7 @@ def test_missing_key_during_load(tmp_path):
             "Missing required key in template file foo: files"
         ),
     ):
-        load_template(template_file)
+        load_template(template)
 
 
 def test_key_error_during_render():
@@ -225,12 +226,14 @@ def test_value_error_during_render():
 
 def test_success_during_get_description(tmp_path, monkeypatch):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
 
-    template_file = template_dir / "foo.toml"
-    template_file.write_text('description="sample template"')
+    template = make_template_file(
+        template_dir,
+        "foo.toml",
+        'description="sample template"',
+    )
 
-    result = get_description(template_file)
+    result = get_description(template)
     assert result == "sample template"
 
 
@@ -239,23 +242,23 @@ def test_file_not_found_during_get_description(
 ):
     template_dir = tmp_path / "templates"
     template_dir.mkdir()
-
-    template_file = template_dir / "foo.toml"
+    template = template_dir / "foo.toml"
 
     with pytest.raises(
         TemplateError, match="Template file not found: foo"
     ):
-        get_description(template_file)
+        get_description(template)
 
 
 def test_permission_error_during_get_description(
     tmp_path, monkeypatch, make_raise
 ):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
-
-    template_file = template_dir / "foo.toml"
-    template_file.write_text('description="sample template"')
+    template = make_template_file(
+        template_dir,
+        "foo.toml",
+        'description="sample template"',
+    )
 
     _ = make_raise(
         "scaffoldr.template_handler.Path.open",
@@ -265,17 +268,16 @@ def test_permission_error_during_get_description(
         TemplateError,
         match="Permission denied reading template: foo",
     ):
-        get_description(template_file)
+        get_description(template)
 
 
 def test_toml_decode_error_during_get_description(
     tmp_path, monkeypatch, make_raise
 ):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
-
-    template_file = template_dir / "foo.toml"
-    template_file.write_text("sample template")
+    template = make_template_file(
+        template_dir, "foo.toml", "sample template"
+    )
 
     _ = make_raise(
         "scaffoldr.template_handler.toml_load",
@@ -288,17 +290,16 @@ def test_toml_decode_error_during_get_description(
             "simulated toml decode error"
         ),
     ):
-        get_description(template_file)
+        get_description(template)
 
 
 def test_os_error_during_get_description(
     tmp_path, monkeypatch, make_raise
 ):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
-
-    template_file = template_dir / "foo.toml"
-    template_file.write_text("sample template")
+    template = make_template_file(
+        template_dir, "foo.toml", "sample template"
+    )
 
     _ = make_raise(
         "scaffoldr.template_handler.toml_load",
@@ -311,20 +312,19 @@ def test_os_error_during_get_description(
             "simulated os error"
         ),
     ):
-        get_description(template_file)
+        get_description(template)
 
 
 def test_description_missing_in_get_description(
     tmp_path, monkeypatch
 ):
     template_dir = tmp_path / "templates"
-    template_dir.mkdir()
-
-    template_file = template_dir / "foo.toml"
-    template_file.write_text('foo="bar"')
+    template = make_template_file(
+        template_dir, "foo.toml", 'foo="bar"'
+    )
 
     with pytest.raises(
         TemplateError,
         match="Missing 'description' in template file foo",
     ):
-        get_description(template_file)
+        get_description(template)
