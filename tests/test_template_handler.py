@@ -75,24 +75,20 @@ def make_template_file(path: Path, file: str, content: str):
     return file_path
 
 
-def test_find_user_template_first_during_resolution(
-    tmp_path, monkeypatch, mock_template_paths
-):
+def test_resolution_find_user_template(mock_template_paths):
     user_file, _ = mock_template_paths
     result = resolve_template_path("foo")
     assert result == user_file
 
 
-def test_falls_back_to_builtin_during_resolution(
-    tmp_path, monkeypatch, mock_template_paths
-):
+def test_resolution_builtin_fallback(mock_template_paths):
     _, builtin_file = mock_template_paths
     result = resolve_template_path("foo1")
     assert result == builtin_file
 
 
-def test_template_not_found_during_resolution(
-    tmp_path, monkeypatch, mock_template_paths
+def test_resolution_template_not_found(
+    tmp_path, mock_template_paths
 ):
     with pytest.raises(
         TemplateError, match="Template 'foo2' not found"
@@ -100,65 +96,48 @@ def test_template_not_found_during_resolution(
         resolve_template_path("foo2")
 
 
-def test_template_not_found_during_load(tmp_path):
+def test_load_template_not_found(tmp_path):
     template = tmp_path / "foo"
-
     with pytest.raises(
         TemplateError, match="Template file not found: foo"
     ):
         load_template(template)
 
 
-def test_permission_error_during_load(tmp_path, raise_on_open):
-    template = make_template_file(
-        tmp_path, "foo", 'description="sample template"'
-    )
+def test_load_permission_err(tmp_path, raise_on_open):
+    template = make_template_file(tmp_path, "f", 'f="b"')
     _ = raise_on_open(PermissionError("read denied"))
 
     with pytest.raises(
         TemplateError,
-        match="Permission denied reading template: foo",
+        match="Permission denied reading template: f",
     ):
         load_template(template)
 
 
-def test_toml_decode_error_during_load(
-    tmp_path, raise_on_toml_load
-):
-    template = make_template_file(
-        tmp_path, "foo", 'description = "sample template"'
-    )
-    _ = raise_on_toml_load(
-        TOMLDecodeError("simulated decode error")
-    )
+def test_load_toml_decode_err(tmp_path, raise_on_toml_load):
+    template = make_template_file(tmp_path, "f", 'f="b"')
+    _ = raise_on_toml_load(TOMLDecodeError("simulated"))
 
     with pytest.raises(
         TemplateError,
-        match=(
-            "Invalid TOML in template file foo: "
-            "simulated decode error"
-        ),
+        match="Invalid TOML in template file f: simulated",
     ):
         load_template(template)
 
 
-def test_os_error_during_load(tmp_path, raise_on_toml_load):
-    template = make_template_file(
-        tmp_path, "foo", 'description = "sample template file"'
-    )
-    _ = raise_on_toml_load(OSError("simulated OSError"))
+def test_load_os_err(tmp_path, raise_on_toml_load):
+    template = make_template_file(tmp_path, "f", 'f="b"')
+    _ = raise_on_toml_load(OSError("simulated"))
 
     with pytest.raises(
         TemplateError,
-        match=(
-            "Failed to read template file foo: "
-            "simulated OSError"
-        ),
+        match="Failed to read template file f: simulated",
     ):
         load_template(template)
 
 
-def test_missing_key_during_load(tmp_path):
+def test_load_missing_key(tmp_path):
     template = make_template_file(
         tmp_path, "foo", 'description = "sample template file"'
     )
@@ -172,7 +151,7 @@ def test_missing_key_during_load(tmp_path):
         load_template(template)
 
 
-def test_key_error_during_render():
+def test_render_key_err():
     variables = {"foo": "bar"}
     template: Template = {
         "description": "Sample template",
@@ -186,7 +165,7 @@ def test_key_error_during_render():
         render_template(template, variables)
 
 
-def test_value_error_during_render():
+def test_render_value_err():
     variables = {"foo": "bar"}
     template: Template = {
         "description": "Sample template",
@@ -199,7 +178,7 @@ def test_value_error_during_render():
         render_template(template, variables)
 
 
-def test_success_during_get_description(tmp_path, monkeypatch):
+def test_get_description_success(tmp_path):
     template = make_template_file(
         tmp_path, "foo.toml", 'description="sample template"'
     )
@@ -207,19 +186,16 @@ def test_success_during_get_description(tmp_path, monkeypatch):
     assert result == "sample template"
 
 
-def test_file_not_found_during_get_description(
-    tmp_path, monkeypatch
-):
+def test_get_description_file_not_found(tmp_path):
     template = tmp_path / "foo.toml"
-
     with pytest.raises(
         TemplateError, match="Template file not found: foo"
     ):
         get_description(template)
 
 
-def test_permission_error_during_get_description(
-    tmp_path, monkeypatch, raise_on_open
+def test_get_description_permission_err(
+    tmp_path, raise_on_open
 ):
     template = make_template_file(
         tmp_path, "foo.toml", 'description="sample template"'
@@ -233,53 +209,37 @@ def test_permission_error_during_get_description(
         get_description(template)
 
 
-def test_toml_decode_error_during_get_description(
-    tmp_path, monkeypatch, raise_on_toml_load
+def test_get_description_toml_decode_err(
+    tmp_path, raise_on_toml_load
 ):
-    template = make_template_file(
-        tmp_path, "foo.toml", "sample template"
-    )
+    template = make_template_file(tmp_path, "f.toml", "sample")
     _ = raise_on_toml_load(
-        TOMLDecodeError("simulated toml decode error"),
+        TOMLDecodeError("simulated"),
     )
 
     with pytest.raises(
         TemplateError,
-        match=(
-            "Invalid TOML in template file foo: "
-            "simulated toml decode error"
-        ),
+        match="Invalid TOML in template file f: simulated",
     ):
         get_description(template)
 
 
-def test_os_error_during_get_description(
-    tmp_path, monkeypatch, raise_on_toml_load
-):
-    template = make_template_file(
-        tmp_path, "foo.toml", "sample template"
-    )
-    _ = raise_on_toml_load(OSError("simulated os error"))
+def test_get_description_os_err(tmp_path, raise_on_toml_load):
+    template = make_template_file(tmp_path, "f.toml", "sample")
+    _ = raise_on_toml_load(OSError("simulated"))
 
     with pytest.raises(
         TemplateError,
-        match=(
-            "Failed to read template file foo: "
-            "simulated os error"
-        ),
+        match="Failed to read template file f: simulated",
     ):
         get_description(template)
 
 
-def test_description_missing_in_get_description(
-    tmp_path, monkeypatch
-):
-    template = make_template_file(
-        tmp_path, "foo.toml", 'foo="bar"'
-    )
+def test_get_description_description_missing(tmp_path):
+    template = make_template_file(tmp_path, "f.toml", 'f="b"')
 
     with pytest.raises(
         TemplateError,
-        match="Missing 'description' in template file foo",
+        match="Missing 'description' in template file f",
     ):
         get_description(template)

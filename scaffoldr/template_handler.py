@@ -133,11 +133,11 @@ def validate_template(path: Path) -> list[tuple[str, bool]]:
         )
     except TOMLDecodeError as e:
         raise TemplateError(
-            f"Invalid TOML in template file {path.stem}: {e}",
+            f"Invalid TOML in template '{path.stem}': {e}",
         ) from e
     except OSError as e:
         raise TemplateError(
-            f"Failed to read template file {path.stem}: {e}",
+            f"Failed to read template '{path.stem}': {e}",
         ) from e
 
     result = []
