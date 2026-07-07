@@ -290,3 +290,135 @@ def assert_validation_result(
             assert passed == expected
             return
     pytest.fail(f"Field '{field}' not found in results")
+
+
+def test_validate_path_does_not_exist(tmp_path):
+
+    template = tmp_path / "foo.toml"
+    with pytest.raises(
+        TemplateError, match="Template 'foo' does not exist."
+    ):
+        validate_template(template)
+
+
+def test_validate_permission_err(tmp_path, raise_on_open):
+    template = make_template_file(tmp_path, "foo.toml", "")
+    _ = raise_on_open(PermissionError("simulated"))
+
+    with pytest.raises(
+        TemplateError,
+        match="Permission denied reading template: foo",
+    ):
+        validate_template(template)
+
+
+def test_validate_toml_decode_err(tmp_path, raise_on_toml_load):
+    template = make_template_file(tmp_path, "foo.toml", "")
+    _ = raise_on_toml_load(TOMLDecodeError("simulated"))
+
+    with pytest.raises(
+        TemplateError,
+        match="Invalid TOML in template 'foo': simulated",
+    ):
+        validate_template(template)
+
+
+def test_validate_os_err(tmp_path, raise_on_toml_load):
+    template = make_template_file(tmp_path, "foo.toml", "")
+    _ = raise_on_toml_load(OSError("simulated"))
+
+    with pytest.raises(
+        TemplateError,
+        match="Failed to read template 'foo': simulated",
+    ):
+        validate_template(template)
+
+
+def test_validate_description_not_in_data(tmp_path):
+    options = {}
+    options["no_desc"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("description", False, result)
+
+
+def test_validate_description_is_empty(tmp_path):
+    options = {}
+    options["empty_desc"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("description", False, result)
+
+
+def test_validate_description_not_string(tmp_path):
+    options = {}
+    options["non_str_desc"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("description", False, result)
+
+
+def test_validate_files_not_in_data(tmp_path):
+    options = {}
+    options["no_files"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("files", False, result)
+
+
+def test_validate_unexpected_fields(tmp_path):
+    options = {}
+    options["unexpected_field"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("foo", False, result)
+
+
+def test_validate_entry_with_empty_path(tmp_path):
+    options = {}
+    options["empty_path"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("files[0].path", False, result)
+
+
+def test_validate_entry_without_path(tmp_path):
+    options = {}
+    options["no_path"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("files[0].path", False, result)
+
+
+def test_validate_entry_without_content(tmp_path):
+    options = {}
+    options["no_content"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("files[0].content", False, result)
+
+
+def test_validate_unexpected_entry_key(tmp_path):
+    options = {}
+    options["unexpected_key"] = True
+    template = make_template_file(
+        tmp_path, "foo.toml", build_template_content(options)
+    )
+    result = validate_template(template)
+    assert_validation_result("files[0].foo", False, result)

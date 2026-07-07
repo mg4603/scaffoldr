@@ -148,9 +148,13 @@ def validate_template(path: Path) -> list[tuple[str, bool]]:
         or not isinstance(data["description"], str)
     ):
         result.append(("description", False))
+    else:
+        result.append(("description", True))
 
     if "files" not in data or len(data.get("files")) == 0:
         result.append(("files", False))
+    else:
+        result.append(("files", True))
 
     unexpected_fields = data.keys() - {"description", "files"}
 
