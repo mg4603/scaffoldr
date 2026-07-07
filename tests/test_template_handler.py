@@ -243,3 +243,50 @@ def test_get_description_description_missing(tmp_path):
         match="Missing 'description' in template file f",
     ):
         get_description(template)
+
+
+def build_template_content(options: dict[str, bool]) -> str:
+    template_string = ""
+
+    if options.get("no_desc", False):
+        pass
+    elif options.get("empty_desc", False):
+        template_string += 'description=""\n'
+    elif options.get("non_str_desc", False):
+        template_string += "description=1234\n"
+    else:
+        template_string += (
+            'description="template description"\n'
+        )
+
+    if options.get("unexpected_field", False):
+        template_string += 'foo="bar"\n'
+
+    if options.get("no_files", False):
+        return template_string
+
+    template_string += "[[files]]\n"
+    if options.get("no_path", False):
+        pass
+    elif options.get("empty_path", False):
+        template_string += 'path=""\n'
+    else:
+        template_string += 'path="some-path"\n'
+
+    if not options.get("no_content", False):
+        template_string += 'content="some-content"\n'
+
+    if options.get("unexpected_key", False):
+        template_string += 'foo="bar"\n'
+
+    return template_string
+
+
+def assert_validation_result(
+    field: str, expected: bool, results: list[tuple[str, bool]]
+):
+    for field_name, passed in results:
+        if field_name == field:
+            assert passed == expected
+            return
+    pytest.fail(f"Field '{field}' not found in results")
