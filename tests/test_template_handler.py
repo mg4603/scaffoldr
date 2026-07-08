@@ -15,17 +15,6 @@ from scaffoldr.template_handler import (
 
 
 @pytest.fixture
-def make_raise(monkeypatch):
-    def _make(target, exception):
-        monkeypatch.setattr(
-            target,
-            lambda *a, **kw: (_ for _ in ()).throw(exception),
-        )
-
-    return _make
-
-
-@pytest.fixture
 def raise_on_open(make_raise):
     def _raise(exception):
         make_raise(
@@ -293,7 +282,6 @@ def assert_validation_result(
 
 
 def test_validate_path_does_not_exist(tmp_path):
-
     template = tmp_path / "foo.toml"
     with pytest.raises(
         TemplateError, match="Template 'foo' does not exist."
