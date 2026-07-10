@@ -28,3 +28,14 @@ def make_mock_config(monkeypatch):
         return mock_config
 
     return _make
+
+
+@pytest.fixture
+def make_raise(monkeypatch):
+    def _make(target, exception):
+        monkeypatch.setattr(
+            target,
+            lambda *a, **kw: (_ for _ in ()).throw(exception),
+        )
+
+    return _make

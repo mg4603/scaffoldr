@@ -116,3 +116,74 @@ def get_description(path: Path) -> str:
             "Missing 'description' in template file "
             f"{path.stem}"
         )
+
+
+def validate_template(path: Path) -> list[tuple[str, bool]]:
+    if not path.exists():
+        raise TemplateError(
+            f"Template '{path.stem}' does not exist."
+        )
+
+    try:
+        with path.open("rb") as f:
+            data: dict[str, Any] = toml_load(f)
+    except PermissionError:
+        raise TemplateError(
+            f"Permission denied reading template: {path.stem}",
+        )
+    except TOMLDecodeError as e:
+        raise TemplateError(
+            f"Invalid TOML in template '{path.stem}': {e}",
+        ) from e
+    except OSError as e:
+        raise TemplateError(
+            f"Failed to read template '{path.stem}': {e}",
+        ) from e
+
+    result = []
+
+    if (
+        "description" not in data
+        or data.get("description") == ""
+        or not isinstance(data["description"], str)
+    ):
+        result.append(("description", False))
+    else:
+        result.append(("description", True))
+
+    if "files" not in data or len(data.get("files")) == 0:
+        result.append(("files", False))
+    else:
+        result.append(("files", True))
+
+    unexpected_fields = data.keys() - {"description", "files"}
+
+    for unexpected_field in unexpected_fields:
+        result.append((unexpected_field, False))
+
+    for i, file in enumerate(data.get("files", [])):
+        if file.keys() == {"path", "content"}:
+            if file["path"] == "":
+                result.append((f"files[{i}].path", False))
+            else:
+                result.append((f"files[{i}]", True))
+
+        else:
+            if "path" not in file:
+                result.append((f"files[{i}].path", False))
+            if "content" not in file:
+                result.append((f"files[{i}].content", False))
+            unexpected_keys = file.keys() - {
+                "path",
+                "content",
+            }
+
+            for unexpected_key in unexpected_keys:
+                result.append(
+                    (
+                        f"files[{i}].{unexpected_key}",
+                        False,
+                    )
+                )
+
+    return result
