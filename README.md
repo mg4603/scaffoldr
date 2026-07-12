@@ -50,31 +50,53 @@ To scaffold locally only (no GitHub):
 scaffoldr init myproject
 ```
 
-## Project structure
+To preview what would happen without making any changes:
+```bash
+scaffoldr new myproject --dry-run
+scaffoldr init myproject --dry-run
+```
 
-Every scaffolded project gets:
+## Templates
+
+`scaffoldr` ships with a `default` template. You can use a 
+different template with the `--template` flag:
+```bash
+scaffoldr new myproject --template mytemplate
+scaffoldr init myproject --template mytemplate
 ```
-myproject/
-├── myproject/
-│   └── __init__.py
-├── tests/
-│   └── __init__.py
-├── docs/
-│   └── adr/
-│       └── 0001-initial-decisions.md
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-├── .gitignore
-├── pyproject.toml
-├── README.md
-└── CONTRIBUTING.md
+
+User-defined templates live in `~/.config/scaffoldr/templates`.
+Each template is a TOML file:
+```toml
+description = "My custom template"
+
+[[files]]
+path = "README.md"
+content = ""
+
+[[files]]
+path = "src/{project_name}/__init__.py"
+content = ""
 ```
+
+Available variables: 
+`project_name`, `author`, `python_version`, `license_`.
+
+To list available templates:
+```bash
+scaffoldr template list
+```
+
+To validate a template before use:
+```bash
+scaffoldr template validate ~/.config/scaffoldr/templates/my_template
+```
+
 
 ## Configuration
 
 Run `scaffoldr config init` to create:
-`~/.scaffoldr/config.toml`:
+`~/.config/scaffoldr/config.toml`:
 ```toml
 author = "Your Name"
 github_username = "yourusername"
@@ -97,6 +119,12 @@ use_ssh = true
 | required_reviewers | 1       | PR reviewers required on main   |
 | use_ssh            | true    | SSH remote, false for HTTPS     |
 
+If you previously used `~/.scaffoldr/config.toml`, migrate config
+file to the XDG-compliant path using:
+```bash
+scaffoldr config migrate
+```
+
 ## GitHub token
 
 Generate a classic token at 
@@ -114,17 +142,20 @@ scaffoldr config init
 
 ## Commands
 ```
-scaffoldr new <name>        Scaffold locally + GitHub
-scaffoldr init <name>       Scaffold locally only
-scaffoldr config init       Create config interactively
-scaffoldr config show       Print current config
-scaffoldr issues create     Create issues on existing repo
+scaffoldr new <name>                Scaffold locally + GitHub
+scaffoldr init <name>               Scaffold locally only
+scaffoldr config init               Create config interactively
+scaffoldr config show               Print current config
+scaffoldr config migrate            Migrate config to XDG location
+scaffoldr issues create             Create issues on existing repo
+scaffoldr template list             List available templates
+scaffoldr template validate <path>  Validate a template file
 ```
 
 ## Issue templates  
 
 scaffoldr ships with default issues every project needs.
-Override or extend them in `~/.scaffoldr/issues.toml`:
+Override or extend them in `~/.config/scaffoldr/issues.toml`:
 ```toml
 [[issue]]
 title = "feat: my custom issue"
