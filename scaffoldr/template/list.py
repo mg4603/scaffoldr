@@ -14,6 +14,7 @@ app = Typer()
 
 @app.command("list")
 def list_cmd():
+    """List available built-in and user-defined templates."""
     typer_echo("Built-in")
     found = False
     for t in list_templates(BUILTIN_TEMPLATES_PATH):
