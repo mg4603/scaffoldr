@@ -4,15 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scaffoldr"
-version = "0.1.0"
+version = "0.2.0"
 description = "CLI tool that scaffolds new projects with opinionated structure"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "typer>=0.9.0",
     "httpx>=0.27.0",
-    "tomli>=2.0.0; python_version < '3.11'",
     "platformdirs>=4.0.0"
 ]
 
