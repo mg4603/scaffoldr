@@ -17,6 +17,7 @@ def validate_cmd(
         ..., help="Path to template to validate"
     ),
 ):
+    """Validate a user-defined TOML file before use."""
     try:
         result = validate_template(path)
     except TemplateError as e:

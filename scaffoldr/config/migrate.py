@@ -14,6 +14,8 @@ app = Typer()
 
 @app.command()
 def migrate() -> None:
+    """Migrate config from ~/.scaffoldr to ~/.config/scaffoldr
+    (XDG-compliant location.)"""
     legacy_path = Path.home() / ".scaffoldr"
     if not legacy_path.exists():
         typer_echo("Legacy config does not exist.")
